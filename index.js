@@ -10,9 +10,10 @@ const PORT = 8080;
 
 const wss = new WebSocket.Server({ server });
 
-app.use(express.static("./"));
-
 let port = process.env.PORT || PORT;
+
+app.use(express.static("./"));
+app.set("port", port);
 
 server.listen(port, function () {
   console.log(`listening on port ${port}`);
