@@ -9,10 +9,10 @@ interface IMessage {
   type: "offer" | "answer" | "candidate";
 }
 
-const origin = window.location.origin;
-origin.replace("https", "wss").replace("http", "ws");
+let origin = window.location.origin;
+origin = origin.replace("https", "wss").replace("http", "ws");
 
-const ws = new WebSocket(`ws://${origin}`);
+const ws = new WebSocket(`${origin}`);
 let isOpen = false;
 
 ws.onmessage = (event) => {
