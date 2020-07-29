@@ -15,9 +15,7 @@ let port = process.env.PORT || PORT;
 app.use(express.static("./"));
 app.set("port", port);
 
-server.listen(port, function () {
-  console.log(`listening on port ${port}`);
-});
+server.listen(port);
 
 console.warn("WebSocket Server Started");
 
