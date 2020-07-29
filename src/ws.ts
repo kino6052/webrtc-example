@@ -12,7 +12,7 @@ interface IMessage {
 const origin = window.location.origin;
 origin.replace("https", "wss").replace("http", "ws");
 
-const ws = new WebSocket(`ws://${IP}:${PORT}`);
+const ws = new WebSocket(`ws://${origin}`);
 let isOpen = false;
 
 ws.onmessage = (event) => {
