@@ -37,6 +37,16 @@ const configuration = {
 
 const pc = new RTCPeerConnection(configuration);
 
+pc.ondatachannel = function (ev) {
+  console.log("Data channel is created!");
+  ev.channel.onopen = function () {
+    console.log("Data channel is open and ready to be used.");
+  };
+  ev.channel.onmessage = (ev: MessageEvent) => {
+    console.warn("Message", ev.data);
+  };
+};
+
 export const sendOffer = () => {
   pc.createOffer()
     .then((sessionDescription) => {
@@ -49,11 +59,18 @@ export const sendOffer = () => {
     });
 };
 
+export const createDataChannel = () => {
+  const dataChannel = pc.createDataChannel("data-channel");
+  // @ts-ignore
+  window.dataChannel = dataChannel;
+};
+
 const createPeerConnection = () => {
   try {
     pc.onicecandidate = handleIceCandidate;
     pc.ontrack = handleTrack;
     console.log("Created RTCPeerConnnection");
+    createDataChannel(); // TODO: Remove
   } catch (e) {
     console.log("Failed to create PeerConnection, exception: " + e.message);
     alert("Cannot create RTCPeerConnection object.");
