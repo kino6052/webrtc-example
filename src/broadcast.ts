@@ -1,16 +1,8 @@
+import { Subject } from "rxjs";
+import { filter } from "rxjs/operators";
 import { generateId } from "./utils";
-import { BehaviorSubject, Subject } from "rxjs";
-import {
-  filter,
-  throttleTime,
-  delay,
-  debounce,
-  debounceTime,
-} from "rxjs/operators";
+import { Client } from "./client";
 
-type TPeerCountType = "greeting" | "farewell";
-type THostType = "host-request" | "offer-request";
-type TICEType = "offer" | "answer" | "candidate";
 type TCommunicationType = "greeting" | "farewell" | "individual";
 
 export interface IMessage<T> {
@@ -20,219 +12,7 @@ export interface IMessage<T> {
   to?: string;
 }
 
-export class ConnectionManager {
-  private connections: { [id: string]: RTCPeerConnection } = {};
-  private dataChannels: { [id: string]: RTCDataChannel } = {};
-  private tracks: { [id: string]: string } = {};
-  constructor(private ma: RTCMessagingAgent) {
-    this.ma.OnAddParticipantSubject.subscribe(this.onAddParticipantHandler);
-    this.ma.OnRemoveParticipantSubject.subscribe(
-      this.onRemoveParticipantHandler
-    );
-    this.ma.OnCreateAnswerSubject.subscribe(this.onCreateAnswerHandler);
-    this.ma.OnSetLocalDescription.subscribe(this.onSetLocalDescriptionHandler);
-    this.ma.OnSetRemoteDescription.subscribe(
-      this.onSetRemoteDescriptionHandler
-    );
-    this.ma.OnAddCandidateSubject.subscribe(this.onAddCandidateHandler);
-  }
-
-  onAddParticipantHandler = (id: string) => {
-    const connection = new RTCPeerConnection();
-    this.connections[id] = connection;
-    const dataChannel = connection.createDataChannel("data-channel");
-    this.dataChannels[id] = dataChannel;
-    connection.ondatachannel = this.onDataChannelHandler(id);
-    connection.onicecandidate = this.onICECandidateHandler(id);
-    connection
-      .createOffer()
-      .then(this.ma.onOfferCreatedHandler(id))
-      .catch((e) => {
-        console.warn(`Couldn't create offer for id ${id}`, e);
-      });
-  };
-
-  onDataChannelHandler = (id: string) => (ev: RTCDataChannelEvent) => {
-    console.warn(`ID: ${id}, On Data Channel Handler`);
-    const dataChannel = ev.channel;
-    if (!dataChannel) return;
-    this.dataChannels[id] = dataChannel;
-  };
-
-  onICECandidateHandler = (id: string) => (ev: RTCPeerConnectionIceEvent) => {
-    console.warn(`ID: ${id}, On ICE Candidate Handler`);
-    const candidate = ev.candidate;
-    if (!candidate) return;
-    this.ma.onCandidateCreatedHandler(id)(candidate);
-  };
-
-  onRemoveParticipantHandler = (id: string) => {
-    delete this.connections[id];
-  };
-
-  onCreateAnswerHandler = (id: string) => {
-    const connection = this.connections[id];
-    if (!connection) return;
-    connection
-      .createAnswer()
-      .then(this.ma.onAnswerCreatedHandler(id))
-      .catch((e) => {
-        console.warn(`Couldn't create answer for id ${id}`, e);
-      });
-  };
-
-  onSetLocalDescriptionHandler = (
-    message: [string, RTCSessionDescriptionInit]
-  ) => {
-    const [id, sessionDescription] = message;
-    const connection = this.connections[id];
-    if (!connection) return;
-    connection.setLocalDescription(sessionDescription);
-  };
-
-  onSetRemoteDescriptionHandler = (
-    message: [string, RTCSessionDescriptionInit]
-  ) => {
-    const [id, sessionDescription] = message;
-    const connection = this.connections[id];
-    if (!connection) return;
-    connection.setRemoteDescription(sessionDescription);
-  };
-
-  onAddCandidateHandler = (message: [string, RTCIceCandidate]) => {
-    const [id, candidate] = message;
-    const connection = this.connections[id];
-    if (!connection) return;
-    connection.addIceCandidate(candidate);
-  };
-}
-
-export class RTCMessagingAgent {
-  public OnAddParticipantSubject = new Subject<string>();
-  public OnRemoveParticipantSubject = new Subject<string>();
-  public OnSetLocalDescription = new Subject<
-    [string, RTCSessionDescriptionInit]
-  >();
-  public OnSetRemoteDescription = new Subject<
-    [string, RTCSessionDescriptionInit]
-  >();
-  public OnCreateAnswerSubject = new Subject<string>();
-  public OnAddCandidateSubject = new Subject<[string, RTCIceCandidate]>();
-
-  constructor(private broadcastingAgent: BroadcastingAgent) {
-    this.broadcastingAgent.addParticipantSubject.subscribe(
-      this.onAddParticipantHandler
-    );
-    this.broadcastingAgent.removeParticipantSubject.subscribe(
-      this.onRemoveParticipantHandler
-    );
-    this.getOfferSubject().subscribe(this.onOfferHandler);
-    this.getAnswerSubject().subscribe(this.onAnswerHandler);
-    this.getCandidateSubject().subscribe(this.onCandidateHandler);
-  }
-
-  onAnswerHandler = (message: IMessage<unknown>) => {
-    const { id, data } = message;
-    this.OnSetRemoteDescription.next([id, data as RTCSessionDescriptionInit]);
-  };
-
-  onOfferHandler = (message: IMessage<unknown>) => {
-    const { id, data } = message;
-    this.OnSetRemoteDescription.next([id, data as RTCSessionDescriptionInit]);
-    this.OnCreateAnswerSubject.next(id);
-  };
-
-  onCandidateHandler = (message: IMessage<unknown>) => {
-    const { id, data } = message;
-    var candidate = new RTCIceCandidate({
-      // @ts-ignore
-      sdpMLineIndex: data.label,
-      // @ts-ignore
-      candidate: data.candidate,
-    });
-    this.OnAddCandidateSubject.next([id, candidate]);
-  };
-
-  onAddParticipantHandler = (id: string) => {
-    this.OnAddParticipantSubject.next(id);
-  };
-
-  onRemoveParticipantHandler = (id: string) => {
-    this.OnRemoveParticipantSubject.next(id);
-  };
-
-  onCandidateCreatedHandler = (id: string) => (candidate: RTCIceCandidate) => {
-    this.broadcastingAgent.sendIndividualRequest(
-      {
-        type: "candidate",
-        label: candidate.sdpMLineIndex,
-        id: candidate.sdpMid,
-        candidate: candidate.candidate,
-      },
-      id
-    );
-  };
-
-  onOfferCreatedHandler = (id: string) => (
-    sessionDescription: RTCSessionDescriptionInit
-  ) => {
-    this.OnSetLocalDescription.next([id, sessionDescription]);
-    console.log("setLocalAndSendMessage sending message", sessionDescription);
-    this.broadcastingAgent.sendIndividualRequest(sessionDescription, id);
-  };
-
-  onAnswerCreatedHandler = (id: string) => (
-    sessionDescription: RTCSessionDescriptionInit
-  ) => {
-    this.OnSetLocalDescription.next([id, sessionDescription]);
-    console.log("setLocalAndSendMessage sending message", sessionDescription);
-    this.broadcastingAgent.sendIndividualRequest(sessionDescription, id);
-  };
-
-  getOfferSubject = () => {
-    return (
-      this.broadcastingAgent
-        .getIndividualMessageCommSubject()
-        // @ts-ignore
-        .pipe(filter(({ data }) => data.type === "offer"))
-    );
-  };
-
-  getAnswerSubject = () => {
-    return (
-      this.broadcastingAgent
-        .getIndividualMessageCommSubject()
-        // @ts-ignore
-        .pipe(filter(({ data }) => data.type === "answer"))
-    );
-  };
-
-  getCandidateSubject = () => {
-    return (
-      this.broadcastingAgent
-        .getIndividualMessageCommSubject()
-        // @ts-ignore
-        .pipe(filter(({ data }) => data.type === "candidate"))
-    );
-  };
-
-  handleIceCandidate = (id: string) => (event: RTCPeerConnectionIceEvent) => {
-    console.log("icecandidate event: ", event);
-    if (event.candidate) {
-      this.broadcastingAgent.sendIndividualRequest(
-        {
-          type: "candidate",
-          label: event.candidate.sdpMLineIndex,
-          id: event.candidate.sdpMid,
-          candidate: event.candidate.candidate,
-        },
-        id
-      );
-    } else {
-      console.log("End of candidates.");
-    }
-  };
-}
+export const CommunicationSubject = new Subject<IMessage<unknown>>();
 
 export class BroadcastingAgent {
   public participants: string[] = [];
@@ -241,14 +21,15 @@ export class BroadcastingAgent {
   private commSubject: Subject<IMessage<unknown>>;
 
   constructor(
-    private id: string = generateId(4, 4),
-    communicationChannel: Subject<IMessage<unknown>>
+    public id: string = generateId(4, 4),
+    communicationChannel: Subject<IMessage<unknown>>,
+    private client: Client
   ) {
     this.commSubject = communicationChannel;
 
     this.getCommSubject().subscribe(this.messageHandler);
     this.getCommSubject().subscribe(this.greetingHandler);
-    this.sendGreeting();
+    this.client.OnInitSubject.subscribe(this.sendGreeting);
   }
 
   getCommSubject = () =>
@@ -266,6 +47,7 @@ export class BroadcastingAgent {
     const participants = this.getParticipants();
     if (type !== "greeting") return;
     if (participants.includes(id)) return;
+    console.warn(`ID: ${this.id}, Add Participant`);
     this.addParticipant(id);
     this.sendGreeting();
   };
@@ -284,8 +66,6 @@ export class BroadcastingAgent {
   };
 
   addParticipant = (id: string) => {
-    const participants = this.getParticipants();
-    if (participants.includes(id)) return;
     this.participants.push(id);
     this.addParticipantSubject.next(id);
   };
