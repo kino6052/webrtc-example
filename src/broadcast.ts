@@ -22,6 +22,8 @@ export interface IMessage<T> {
 
 export class ConnectionManager {
   private connections: { [id: string]: RTCPeerConnection } = {};
+  private dataChannels: { [id: string]: RTCDataChannel } = {};
+  private tracks: { [id: string]: string } = {};
   constructor(private ma: RTCMessagingAgent) {
     this.ma.OnAddParticipantSubject.subscribe(this.onAddParticipantHandler);
     this.ma.OnRemoveParticipantSubject.subscribe(
@@ -38,12 +40,30 @@ export class ConnectionManager {
   onAddParticipantHandler = (id: string) => {
     const connection = new RTCPeerConnection();
     this.connections[id] = connection;
+    const dataChannel = connection.createDataChannel("data-channel");
+    this.dataChannels[id] = dataChannel;
+    connection.ondatachannel = this.onDataChannelHandler(id);
+    connection.onicecandidate = this.onICECandidateHandler(id);
     connection
       .createOffer()
       .then(this.ma.onOfferCreatedHandler(id))
       .catch((e) => {
         console.warn(`Couldn't create offer for id ${id}`, e);
       });
+  };
+
+  onDataChannelHandler = (id: string) => (ev: RTCDataChannelEvent) => {
+    console.warn(`ID: ${id}, On Data Channel Handler`);
+    const dataChannel = ev.channel;
+    if (!dataChannel) return;
+    this.dataChannels[id] = dataChannel;
+  };
+
+  onICECandidateHandler = (id: string) => (ev: RTCPeerConnectionIceEvent) => {
+    console.warn(`ID: ${id}, On ICE Candidate Handler`);
+    const candidate = ev.candidate;
+    if (!candidate) return;
+    this.ma.onCandidateCreatedHandler(id)(candidate);
   };
 
   onRemoveParticipantHandler = (id: string) => {
@@ -139,6 +159,18 @@ export class RTCMessagingAgent {
 
   onRemoveParticipantHandler = (id: string) => {
     this.OnRemoveParticipantSubject.next(id);
+  };
+
+  onCandidateCreatedHandler = (id: string) => (candidate: RTCIceCandidate) => {
+    this.broadcastingAgent.sendIndividualRequest(
+      {
+        type: "candidate",
+        label: candidate.sdpMLineIndex,
+        id: candidate.sdpMid,
+        candidate: candidate.candidate,
+      },
+      id
+    );
   };
 
   onOfferCreatedHandler = (id: string) => (
