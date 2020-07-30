@@ -6,6 +6,7 @@ import {
 } from "./ws";
 import { InitSubject } from "./init";
 import { RemoteMediaSubject, LocalMediaSubject } from "./media";
+import { generateId } from "./utils";
 
 const configuration = {
   iceServers: [
@@ -134,10 +135,3 @@ const localMediaHander = (stream: MediaStream | null) => {
     pc.addTrack(track);
   });
 };
-
-InitSubject.subscribe(() => {
-  OfferSubject.subscribe((message) => offerHandler(message));
-  AnswerSubject.subscribe((message) => answerHandler(message));
-  CandidateSubject.subscribe((message) => candidateHandler(message));
-  LocalMediaSubject.subscribe((stream) => localMediaHander(stream));
-});

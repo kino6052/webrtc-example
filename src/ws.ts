@@ -3,6 +3,7 @@ import { filter, tap } from "rxjs/operators";
 import { Subject } from "rxjs";
 import { InitSubject } from "./init";
 import { generateId } from "./utils";
+import { BehaviorSubject } from "rx";
 
 interface IMessage {
   id: string;
