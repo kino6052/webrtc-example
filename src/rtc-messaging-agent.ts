@@ -11,7 +11,7 @@ export class RTCMessagingAgent {
   public OnSetRemoteDescription = new Subject<
     [string, RTCSessionDescriptionInit]
   >();
-  public OnCreateAnswerSubject = new Subject<string>();
+  // public OnCreateAnswerSubject = new Subject<string>();
   public OnAddCandidateSubject = new Subject<[string, RTCIceCandidate]>();
 
   constructor(public broadcastingAgent: BroadcastingAgent) {
@@ -34,7 +34,7 @@ export class RTCMessagingAgent {
   onOfferHandler = (message: IMessage<unknown>) => {
     const { id, data } = message;
     this.OnSetRemoteDescription.next([id, data as RTCSessionDescriptionInit]);
-    this.OnCreateAnswerSubject.next(id);
+    // this.OnCreateAnswerSubject.next(id);
   };
 
   onCandidateHandler = (message: IMessage<unknown>) => {

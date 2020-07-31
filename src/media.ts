@@ -4,7 +4,7 @@ import { InitSubject } from "./init";
 export const RemoteMediaSubject = new BehaviorSubject<MediaStream | null>(null);
 export const LocalMediaSubject = new BehaviorSubject<MediaStream | null>(null);
 
-const getUserMedia = () => {
+export const getUserMedia = () => {
   navigator.mediaDevices
     .getUserMedia({
       audio: false,

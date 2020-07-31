@@ -11,10 +11,14 @@ const addLocalVideo = (stream: MediaStream) => {
   localVideo.srcObject = stream;
 };
 
-const addRemoteVideo = (stream: MediaStream) => {
-  var remoteVideo = document.querySelector("#remoteVideo") as HTMLVideoElement;
-  if (!remoteVideo) return;
-  remoteVideo.srcObject = stream;
+export const addRemoteVideo = (stream: MediaStream) => {
+  const videoElement = document.createElement("video");
+  videoElement.setAttribute("autoplay", "");
+  videoElement.setAttribute("playsinline", "");
+  const videos = document.querySelector("#videos");
+  if (!videos) return;
+  videos.append(videoElement);
+  videoElement.srcObject = stream;
 };
 
 const onRequestClickHandler1 = () => {
@@ -36,10 +40,10 @@ const onRequestClickHandler2 = () => {
 InitSubject.subscribe(() => {
   onRequestClickHandler1();
   onRequestClickHandler2();
-  LocalMediaSubject.subscribe((stream) => {
-    if (!stream) return;
-    addLocalVideo(stream);
-  });
+  // LocalMediaSubject.subscribe((stream) => {
+  //   if (!stream) return;
+  //   addLocalVideo(stream);
+  // });
   RemoteMediaSubject.subscribe((stream) => {
     if (!stream) return;
     addRemoteVideo(stream);

@@ -48,7 +48,6 @@ export class BroadcastingAgent {
     console.warn(`ID: ${this.id}, Add Participant`);
     this.addParticipant(id);
     setTimeout(this.sendGreeting, 100);
-    // this.sendGreeting();
   };
 
   farewellHandler = (message: IMessage<unknown>) => {

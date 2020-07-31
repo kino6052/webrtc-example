@@ -1,5 +1,6 @@
 import { RTCMessagingAgent } from "./rtc-messaging-agent";
 import { Subject } from "rxjs";
+import { LocalMediaSubject } from "./media";
 
 const configuration = {
   iceServers: [
@@ -32,15 +33,16 @@ const configuration = {
 export class ConnectionManager {
   private connections: { [id: string]: RTCPeerConnection } = {};
   public dataChannels: { [id: string]: RTCDataChannel } = {};
-  public tracks: { [id: string]: string } = {};
+  public streams: { [id: string]: MediaStream[] } = {};
   public OnDataChannelMessage = new Subject<[string, string]>();
+  public OnStreamSubject = new Subject<MediaStream>();
 
   constructor(private ma: RTCMessagingAgent) {
     this.ma.OnAddParticipantSubject.subscribe(this.onAddParticipantHandler);
     this.ma.OnRemoveParticipantSubject.subscribe(
       this.onRemoveParticipantHandler
     );
-    this.ma.OnCreateAnswerSubject.subscribe(this.onCreateAnswerHandler);
+    // this.ma.OnCreateAnswerSubject.subscribe(this.onCreateAnswerHandler);
     this.ma.OnSetLocalDescription.subscribe(this.onSetLocalDescriptionHandler);
     this.ma.OnSetRemoteDescription.subscribe(
       this.onSetRemoteDescriptionHandler
@@ -49,17 +51,31 @@ export class ConnectionManager {
   }
 
   createConnection = (id: string) => {
+    const _id = this.ma.broadcastingAgent.id;
     console.warn(
       `ID: ${id}, Create Connection in ${this.ma.broadcastingAgent.id}`
     );
     const connection = new RTCPeerConnection(configuration);
     this.connections[id] = connection;
     const dataChannel = connection.createDataChannel("data-channel");
+    this.addStreamToConnection(connection);
     this.dataChannels[id] = dataChannel;
     dataChannel.onmessage = this.onDataChannelMessageHandler(id);
     connection.ondatachannel = this.onDataChannelHandler(id);
+    connection.ontrack = this.onTrackHandler(id);
     connection.onicecandidate = this.onICECandidateHandler(id);
     return connection;
+  };
+
+  addStream = (id: string, stream: MediaStream) => {
+    if (!this.streams[id]) this.streams[id] = [];
+    this.streams[id].push(stream);
+  };
+
+  addStreamToConnection = (connection: RTCPeerConnection) => {
+    const stream = LocalMediaSubject.getValue();
+    if (!stream) return;
+    stream.getTracks().forEach((t) => connection.addTrack(t, stream));
   };
 
   onAddParticipantHandler = (id: string) => {
@@ -83,6 +99,13 @@ export class ConnectionManager {
     this.dataChannels[id] = dataChannel;
   };
 
+  onTrackHandler = (id: string) => (ev: RTCTrackEvent) => {
+    console.warn(`ID: ${id}, On Track Handler`);
+    const stream = ev.streams[0];
+    this.addStream(id, stream);
+    this.OnStreamSubject.next(stream);
+  };
+
   onDataChannelMessageHandler = (id: string) => (ev: MessageEvent) => {
     const message = ev.data;
     if (!message) return;
@@ -100,13 +123,12 @@ export class ConnectionManager {
     delete this.connections[id];
   };
 
-  onCreateAnswerHandler = (id: string) => {
-    const oldConnection = this.connections[id];
-    if (!oldConnection) return;
-    const remoteDescription = oldConnection.remoteDescription;
-    if (!remoteDescription) return;
+  onCreateAnswerHandler = (
+    id: string,
+    sessionDescription: RTCSessionDescriptionInit
+  ) => {
     const connection = this.createConnection(id);
-    connection.setRemoteDescription(remoteDescription);
+    connection.setRemoteDescription(sessionDescription);
     connection
       .createAnswer()
       .then(this.ma.onAnswerCreatedHandler(id))
@@ -132,8 +154,13 @@ export class ConnectionManager {
       `Setting remote description in ${this.ma.broadcastingAgent.id} for ${id}`
     );
     const connection = this.connections[id];
-    if (!connection) return;
-    connection.setRemoteDescription(sessionDescription);
+    if (!connection) {
+      // Answer
+      this.onCreateAnswerHandler(id, sessionDescription);
+    } else {
+      // Offer
+      connection.setRemoteDescription(sessionDescription);
+    }
   };
 
   onAddCandidateHandler = (message: [string, RTCIceCandidate]) => {

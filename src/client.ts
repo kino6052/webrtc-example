@@ -3,6 +3,7 @@ import { ConnectionManager } from "./connection-manager";
 import { BroadcastingAgent, CommunicationSubject } from "./broadcast";
 import { RTCMessagingAgent } from "./rtc-messaging-agent";
 import { Subject } from "rxjs";
+import { addRemoteVideo } from "./ui";
 
 export class Client {
   private id = generateId(4, 4);
@@ -17,6 +18,7 @@ export class Client {
     this.ConnectionManager.OnDataChannelMessage.subscribe(
       this.onDataChannelMessageHandler
     );
+    this.ConnectionManager.OnStreamSubject.subscribe(this.onStreamHandler);
     this.BroadcastingAgent.sendGreeting();
   }
 
@@ -28,5 +30,9 @@ export class Client {
 
   onDataChannelMessageHandler = (message: [string, string]) => {
     console.warn(message);
+  };
+
+  onStreamHandler = (stream: MediaStream) => {
+    addRemoteVideo(stream);
   };
 }
