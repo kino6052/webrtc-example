@@ -1,6 +1,7 @@
-import { InitSubject } from "./init";
-import { LocalMediaSubject, RemoteMediaSubject } from "./media";
 import { Subject } from "rxjs";
+import { InitSubject } from "./init";
+import { RemoteMediaSubject } from "./media";
+import { ClientSubject } from "./rtc";
 
 export const RequestClickSubject1 = new Subject();
 export const RequestClickSubject2 = new Subject();
@@ -21,31 +22,12 @@ export const addRemoteVideo = (stream: MediaStream) => {
   videoElement.srcObject = stream;
 };
 
-const onRequestClickHandler1 = () => {
-  const offerButton = document.querySelector("#offer1");
-  if (!offerButton) return;
-  offerButton.addEventListener("click", () => {
-    RequestClickSubject1.next();
-  });
-};
-
-const onRequestClickHandler2 = () => {
-  const offerButton = document.querySelector("#offer2");
-  if (!offerButton) return;
-  offerButton.addEventListener("click", () => {
-    RequestClickSubject2.next();
-  });
-};
-
 InitSubject.subscribe(() => {
-  onRequestClickHandler1();
-  onRequestClickHandler2();
-  // LocalMediaSubject.subscribe((stream) => {
-  //   if (!stream) return;
-  //   addLocalVideo(stream);
-  // });
   RemoteMediaSubject.subscribe((stream) => {
     if (!stream) return;
     addRemoteVideo(stream);
+  });
+  ClientSubject.subscribe((client) => {
+    client?.OnStreamSubject.subscribe((message) => addRemoteVideo(message[1]));
   });
 });

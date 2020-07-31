@@ -1,7 +1,5 @@
-import "./init";
-import "./media";
-import "./ws";
-import "./rtc";
-import "./rtc-remote";
-import "./rtc-local";
-import "./ui";
+import "./services/init";
+import "./services/media";
+import "./services/rtc";
+import "./services/ui";
+import "./services/ws";
