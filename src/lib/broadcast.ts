@@ -15,7 +15,10 @@ export interface IMessage<T> {
 export const CommunicationSubject = new Subject<IMessage<unknown>>();
 
 export class BroadcastingAgent {
+  // Participants
   public participants: string[] = [];
+
+  // Subjects
   public addParticipantSubject = new Subject<string>();
   public removeParticipantSubject = new Subject<string>();
   private commSubject: Subject<IMessage<unknown>>;

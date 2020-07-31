@@ -4,9 +4,14 @@ import { IMessage } from "./broadcast";
 
 export class WebSocketsAgent {
   private ws: WebSocket;
+
+  // Flags
   private isOpen = false;
   private canSend = true;
+
+  // Subjects
   public IsWebSocketReadySubject = new BehaviorSubject(false);
+
   constructor(private CommunicationSubject: Subject<IMessage<unknown>>) {
     const url = this.getURL();
     this.ws = new WebSocket(url);

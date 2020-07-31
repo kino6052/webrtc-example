@@ -30,7 +30,10 @@ const configuration = {
 };
 
 export class ConnectionManager {
+  // Connections
   private connections: { [id: string]: RTCPeerConnection } = {};
+
+  // Subjects
   public OnStreamSubject = new Subject<MediaStream>();
   public OnDataChannelSubject = new Subject<RTCDataChannel>();
   public OnConnectionCreatedSubject = new Subject<

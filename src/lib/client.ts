@@ -8,14 +8,20 @@ import { LocalMediaSubject } from "../services/media";
 
 export class Client {
   public id = generateId(4, 4);
+
+  // Channels
   public dataChannels: { [id: string]: RTCDataChannel } = {};
   public streams: { [id: string]: MediaStream[] } = {};
+
+  // Agents
   private BroadcastingAgent = new BroadcastingAgent(
     this.id,
     CommunicationSubject
   );
   private RTCMessagingAgent = new RTCMessagingAgent(this.BroadcastingAgent);
   private ConnectionManager = new ConnectionManager(this.RTCMessagingAgent);
+
+  // Subjects
   public OnDataChannelMessageSubject = new Subject<[string, string]>();
   public OnDataChannelSubject = new Subject<[string, RTCDataChannel]>();
   public OnStreamSubject = new Subject<[string, MediaStream]>();

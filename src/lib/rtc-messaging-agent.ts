@@ -3,6 +3,7 @@ import { filter } from "rxjs/operators";
 import { BroadcastingAgent, IMessage } from "./broadcast";
 
 export class RTCMessagingAgent {
+  // Subjects
   public OnAddParticipantSubject = new Subject<string>();
   public OnRemoveParticipantSubject = new Subject<string>();
   public OnSetLocalDescription = new Subject<
