@@ -6,18 +6,18 @@ import { Subject } from "rxjs";
 
 export class Client {
   private id = generateId(4, 4);
-  public OnInitSubject = new Subject();
   private BroadcastingAgent = new BroadcastingAgent(
     this.id,
-    CommunicationSubject,
-    this
+    CommunicationSubject
   );
   private RTCMessagingAgent = new RTCMessagingAgent(this.BroadcastingAgent);
   private ConnectionManager = new ConnectionManager(this.RTCMessagingAgent);
 
   constructor() {
-    this.ConnectionManager.OnDataChannelMessage.subscribe();
-    this.OnInitSubject.next();
+    this.ConnectionManager.OnDataChannelMessage.subscribe(
+      this.onDataChannelMessageHandler
+    );
+    this.BroadcastingAgent.sendGreeting();
   }
 
   sendDataToChannel = (id: string, message: string) => {
@@ -26,7 +26,7 @@ export class Client {
     channel.send(message);
   };
 
-  onDataChannelMessageHandler = (message: Array<[string, string]>) => {
+  onDataChannelMessageHandler = (message: [string, string]) => {
     console.warn(message);
   };
 }

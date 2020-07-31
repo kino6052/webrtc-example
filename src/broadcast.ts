@@ -22,14 +22,12 @@ export class BroadcastingAgent {
 
   constructor(
     public id: string = generateId(4, 4),
-    communicationChannel: Subject<IMessage<unknown>>,
-    private client: Client
+    communicationChannel: Subject<IMessage<unknown>>
   ) {
     this.commSubject = communicationChannel;
 
     this.getCommSubject().subscribe(this.messageHandler);
     this.getCommSubject().subscribe(this.greetingHandler);
-    this.client.OnInitSubject.subscribe(this.sendGreeting);
   }
 
   getCommSubject = () =>
@@ -49,7 +47,8 @@ export class BroadcastingAgent {
     if (participants.includes(id)) return;
     console.warn(`ID: ${this.id}, Add Participant`);
     this.addParticipant(id);
-    this.sendGreeting();
+    setTimeout(this.sendGreeting, 100);
+    // this.sendGreeting();
   };
 
   farewellHandler = (message: IMessage<unknown>) => {

@@ -54,9 +54,9 @@ export class ConnectionManager {
     );
     const connection = new RTCPeerConnection(configuration);
     this.connections[id] = connection;
-    // const dataChannel = connection.createDataChannel("data-channel");
-    // this.dataChannels[id] = dataChannel;
-    // dataChannel.onmessage = this.onDataChannelMessageHandler(id);
+    const dataChannel = connection.createDataChannel("data-channel");
+    this.dataChannels[id] = dataChannel;
+    dataChannel.onmessage = this.onDataChannelMessageHandler(id);
     connection.ondatachannel = this.onDataChannelHandler(id);
     connection.onicecandidate = this.onICECandidateHandler(id);
     return connection;
@@ -64,6 +64,8 @@ export class ConnectionManager {
 
   onAddParticipantHandler = (id: string) => {
     console.warn(`${this.ma.broadcastingAgent.id} On Add Participant Handler`);
+    const oldConnection = this.connections[id];
+    if (oldConnection) return;
     const connection = this.createConnection(id);
     connection
       .createOffer()
