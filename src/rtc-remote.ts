@@ -2,8 +2,10 @@ import { filter } from "rxjs/operators";
 import { EnvironmentSubject, InitSubject } from "./init";
 import { Client } from "./client";
 
+export let client: Client;
+
 const init = () => {
-  new Client();
+  client = new Client();
 };
 
 InitSubject.pipe(

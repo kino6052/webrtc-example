@@ -1,33 +1,73 @@
-import { CommunicationSubject } from "./broadcast";
-import { InitSubject, EnvironmentSubject } from "./init";
-import { filter } from "rxjs/operators";
+import { Subject, combineLatest } from "rxjs";
+import { client } from "./rtc-remote";
+import { CommunicationSubject, IMessage } from "./broadcast";
+import {
+  IsWebSocketReady,
+  EnvironmentSubject,
+  IsWindowLoadedSubject,
+  InitSubject,
+} from "./init";
+import { distinctUntilChanged, filter } from "rxjs/operators";
 
-const init = () => {
-  let origin = window.location.origin;
-  origin = origin.replace("https", "wss").replace("http", "ws");
+let origin = window.location.origin;
+origin = origin.replace("https", "wss").replace("http", "ws");
 
-  const ws = new WebSocket(`${origin}`);
-  let isOpen = false;
+const ws = new WebSocket(`${origin}`);
+let isOpen = false;
 
-  ws.onmessage = (event) => {
-    CommunicationSubject.next(JSON.parse(event.data));
-  };
+export const WebSocketMessageSubject = new Subject<string>();
 
-  ws.onopen = () => {
-    isOpen = true;
-  };
+let flag = true;
 
-  ws.onclose = () => {
-    isOpen = false;
-  };
-
-  CommunicationSubject.subscribe((m) => {
-    ws.send(JSON.stringify(m));
-  });
+ws.onmessage = (event) => {
+  console.warn(event.data);
+  const c = client;
+  if (!c) return;
+  const message = JSON.parse(event.data) as IMessage<unknown>;
+  if (message.id === c.id) return;
+  flag = false;
+  CommunicationSubject.next(message);
 };
 
-InitSubject.pipe(
-  filter(() => EnvironmentSubject.getValue() === "remote")
-).subscribe(() => {
-  init();
+ws.onopen = () => {
+  isOpen = true;
+  IsWebSocketReady.next(true);
+};
+
+ws.onclose = () => {
+  isOpen = false;
+};
+
+export const sendMessage = (message: string) => {
+  console.warn(message);
+  ws.send(message);
+};
+
+CommunicationSubject.pipe(
+  filter(() => {
+    const cur = flag;
+    if (!flag) flag = true;
+    return cur;
+  })
+).subscribe((message) => {
+  sendMessage(JSON.stringify(message));
+});
+
+window.addEventListener("load", () => {
+  let origin = window.location.origin;
+  const isLocal = origin.includes("localhost");
+  EnvironmentSubject.next("remote"); //isLocal ? "local" : "remote");
+  IsWindowLoadedSubject.next(true);
+});
+
+combineLatest(
+  EnvironmentSubject,
+  IsWindowLoadedSubject,
+  IsWebSocketReady
+).subscribe((values) => {
+  const [env, isWindowLoaded, isWebSocketReady] = values;
+  if (!isWindowLoaded) return;
+  if (env === "remote" && !isWebSocketReady) return;
+  InitSubject.next();
+  console.warn("Initialized");
 });

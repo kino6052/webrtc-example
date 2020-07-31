@@ -1,14 +1,10 @@
-import { Subject, BehaviorSubject } from "rxjs";
+import { BehaviorSubject, Subject } from "rxjs";
 
 export const InitSubject = new Subject();
 
 export const EnvironmentSubject = new BehaviorSubject<"local" | "remote">(
   "local"
 );
+export const IsWindowLoadedSubject = new BehaviorSubject<boolean>(false);
 
-window.addEventListener("load", () => {
-  let origin = window.location.origin;
-  const isLocal = origin.includes("localhost");
-  EnvironmentSubject.next(isLocal ? "local" : "remote");
-  InitSubject.next();
-});
+export const IsWebSocketReady = new BehaviorSubject<boolean>(false);

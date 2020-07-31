@@ -2,11 +2,10 @@ import { generateId } from "./utils";
 import { ConnectionManager } from "./connection-manager";
 import { BroadcastingAgent, CommunicationSubject } from "./broadcast";
 import { RTCMessagingAgent } from "./rtc-messaging-agent";
-import { Subject } from "rxjs";
 import { addRemoteVideo } from "./ui";
 
 export class Client {
-  private id = generateId(4, 4);
+  public id = generateId(4, 4);
   private BroadcastingAgent = new BroadcastingAgent(
     this.id,
     CommunicationSubject
@@ -20,6 +19,7 @@ export class Client {
     );
     this.ConnectionManager.OnStreamSubject.subscribe(this.onStreamHandler);
     this.BroadcastingAgent.sendGreeting();
+    console.warn("Client", this.id);
   }
 
   sendDataToChannel = (id: string, message: string) => {
