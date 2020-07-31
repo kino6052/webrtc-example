@@ -30,6 +30,8 @@ export class BroadcastingAgent {
     this.getCommSubject().subscribe(this.greetingHandler);
   }
 
+  // Messaging Utils
+
   getCommSubject = () =>
     this.commSubject.pipe(filter(({ id: _id }) => _id !== this.id));
 
@@ -39,6 +41,35 @@ export class BroadcastingAgent {
   messageHandler = (message: IMessage<unknown>) => {
     console.warn(message);
   };
+
+  sendIndividualRequest = <T>(data: T, to: string) => {
+    this.commSubject.next({
+      id: this.id,
+      type: "individual",
+      data,
+      to,
+    });
+  };
+
+  // Participants
+
+  addParticipant = (id: string) => {
+    this.participants.push(id);
+    this.addParticipantSubject.next(id);
+  };
+
+  removeParticipant = (id: string) => {
+    let participants = this.getParticipants();
+    participants = participants.filter((_id) => _id !== id);
+    this.removeParticipantSubject.next(id);
+  };
+
+  getParticipants = () => {
+    const participants = [...this.participants];
+    return participants;
+  };
+
+  // Salutations
 
   greetingHandler = (message: IMessage<unknown>) => {
     const { id, type } = message;
@@ -56,31 +87,6 @@ export class BroadcastingAgent {
     if (type !== "farewell") return;
     if (participants.includes(id)) return;
     this.removeParticipant(id);
-  };
-
-  getParticipants = () => {
-    const participants = [...this.participants];
-    return participants;
-  };
-
-  addParticipant = (id: string) => {
-    this.participants.push(id);
-    this.addParticipantSubject.next(id);
-  };
-
-  removeParticipant = (id: string) => {
-    let participants = this.getParticipants();
-    participants = participants.filter((_id) => _id !== id);
-    this.removeParticipantSubject.next(id);
-  };
-
-  sendIndividualRequest = <T>(data: T, to: string) => {
-    this.commSubject.next({
-      id: this.id,
-      type: "individual",
-      data,
-      to,
-    });
   };
 
   sendGreeting = () => {

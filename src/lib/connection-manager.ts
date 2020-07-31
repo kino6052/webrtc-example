@@ -62,6 +62,8 @@ export class ConnectionManager {
     return connection;
   };
 
+  // Add/Remove Participants
+
   onAddParticipantHandler = (id: string) => {
     console.warn(`${this.ma.broadcastingAgent.id} On Add Participant Handler`);
     const oldConnection = this.connections[id];
@@ -75,30 +77,11 @@ export class ConnectionManager {
       });
   };
 
-  onICECandidateHandler = (id: string) => (ev: RTCPeerConnectionIceEvent) => {
-    console.warn(`ID: ${id}, On ICE Candidate Handler`);
-    const candidate = ev.candidate;
-    if (!candidate) return;
-    this.ma.onCandidateCreatedHandler(id)(candidate);
-  };
-
   onRemoveParticipantHandler = (id: string) => {
     delete this.connections[id];
   };
 
-  onCreateAnswerHandler = (
-    id: string,
-    sessionDescription: RTCSessionDescriptionInit
-  ) => {
-    const connection = this.createConnection(id);
-    connection.setRemoteDescription(sessionDescription);
-    connection
-      .createAnswer()
-      .then(this.ma.onAnswerCreatedHandler(id))
-      .catch((e) => {
-        console.warn(`Couldn't create answer in ID ${id}`, e);
-      });
-  };
+  // Session Description
 
   onSetLocalDescriptionHandler = (
     message: [string, RTCSessionDescriptionInit]
@@ -124,6 +107,29 @@ export class ConnectionManager {
       // Offer
       connection.setRemoteDescription(sessionDescription);
     }
+  };
+
+  // Connection Logistics
+
+  onICECandidateHandler = (id: string) => (ev: RTCPeerConnectionIceEvent) => {
+    console.warn(`ID: ${id}, On ICE Candidate Handler`);
+    const candidate = ev.candidate;
+    if (!candidate) return;
+    this.ma.onCandidateCreatedHandler(id)(candidate);
+  };
+
+  onCreateAnswerHandler = (
+    id: string,
+    sessionDescription: RTCSessionDescriptionInit
+  ) => {
+    const connection = this.createConnection(id);
+    connection.setRemoteDescription(sessionDescription);
+    connection
+      .createAnswer()
+      .then(this.ma.onAnswerCreatedHandler(id))
+      .catch((e) => {
+        console.warn(`Couldn't create answer in ID ${id}`, e);
+      });
   };
 
   onAddCandidateHandler = (message: [string, RTCIceCandidate]) => {

@@ -21,9 +21,9 @@ export class Client {
   public OnStreamSubject = new Subject<[string, MediaStream]>();
 
   constructor() {
-    // this.OnDataChannelMessageSubject.subscribe(
-    //   this.onDataChannelMessageHandler
-    // );
+    this.OnDataChannelMessageSubject.subscribe(
+      this.onDataChannelMessageSubjectHandler
+    );
     this.ConnectionManager.OnConnectionCreatedSubject.subscribe(
       this.onConnectionCreatedHandler
     );
@@ -32,11 +32,7 @@ export class Client {
     console.warn("Client", this.id);
   }
 
-  sendDataToChannel = (id: string, message: string) => {
-    const channel = this.dataChannels[id];
-    if (!channel) return;
-    channel.send(message);
-  };
+  // Connection
 
   onConnectionCreatedHandler = (message: [string, RTCPeerConnection]) => {
     const [id, connection] = message;
@@ -48,12 +44,12 @@ export class Client {
     connection.ontrack = this.onTrackHandler(id);
   };
 
-  // onDataChannelMessageHandler = (message: [string, string]) => {
-  //   console.warn(message);
-  // };
+  // Stream
 
-  onStreamHandler = (stream: MediaStream) => {
-    addRemoteVideo(stream);
+  addStreamToConnection = (connection: RTCPeerConnection) => {
+    const stream = LocalMediaSubject.getValue();
+    if (!stream) return;
+    stream.getTracks().forEach((t) => connection.addTrack(t, stream));
   };
 
   addStream = (id: string, stream: MediaStream) => {
@@ -61,10 +57,23 @@ export class Client {
     this.streams[id].push(stream);
   };
 
-  addStreamToConnection = (connection: RTCPeerConnection) => {
-    const stream = LocalMediaSubject.getValue();
-    if (!stream) return;
-    stream.getTracks().forEach((t) => connection.addTrack(t, stream));
+  onStreamHandler = (stream: MediaStream) => {
+    addRemoteVideo(stream);
+  };
+
+  onTrackHandler = (id: string) => (ev: RTCTrackEvent) => {
+    console.warn(`ID: ${id}, On Track Handler`);
+    const stream = ev.streams[0];
+    this.addStream(id, stream);
+    this.OnStreamSubject.next([id, stream]);
+  };
+
+  // Data Channel
+
+  sendDataToChannel = (id: string, message: string) => {
+    const channel = this.dataChannels[id];
+    if (!channel) return;
+    channel.send(message);
   };
 
   onDataChannelHandler = (id: string) => (ev: RTCDataChannelEvent) => {
@@ -76,16 +85,13 @@ export class Client {
     this.OnDataChannelSubject.next([id, dataChannel]);
   };
 
-  onTrackHandler = (id: string) => (ev: RTCTrackEvent) => {
-    console.warn(`ID: ${id}, On Track Handler`);
-    const stream = ev.streams[0];
-    this.addStream(id, stream);
-    this.OnStreamSubject.next([id, stream]);
-  };
-
   onDataChannelMessageHandler = (id: string) => (ev: MessageEvent) => {
     const message = ev.data;
     if (!message) return;
     this.OnDataChannelMessageSubject.next([id, message]);
+  };
+
+  onDataChannelMessageSubjectHandler = (message: [string, string]) => {
+    console.warn(message);
   };
 }

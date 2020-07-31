@@ -26,27 +26,7 @@ export class RTCMessagingAgent {
     this.getCandidateSubject().subscribe(this.onCandidateHandler);
   }
 
-  onAnswerHandler = (message: IMessage<unknown>) => {
-    const { id, data } = message;
-    this.OnSetRemoteDescription.next([id, data as RTCSessionDescriptionInit]);
-  };
-
-  onOfferHandler = (message: IMessage<unknown>) => {
-    const { id, data } = message;
-    this.OnSetRemoteDescription.next([id, data as RTCSessionDescriptionInit]);
-    // this.OnCreateAnswerSubject.next(id);
-  };
-
-  onCandidateHandler = (message: IMessage<unknown>) => {
-    const { id, data } = message;
-    var candidate = new RTCIceCandidate({
-      // @ts-ignore
-      sdpMLineIndex: data.label,
-      // @ts-ignore
-      candidate: data.candidate,
-    });
-    this.OnAddCandidateSubject.next([id, candidate]);
-  };
+  // Add/Remove Participants
 
   onAddParticipantHandler = (id: string) => {
     this.OnAddParticipantSubject.next(id);
@@ -56,15 +36,16 @@ export class RTCMessagingAgent {
     this.OnRemoveParticipantSubject.next(id);
   };
 
-  onCandidateCreatedHandler = (id: string) => (candidate: RTCIceCandidate) => {
-    this.broadcastingAgent.sendIndividualRequest(
-      {
-        type: "candidate",
-        label: candidate.sdpMLineIndex,
-        id: candidate.sdpMid,
-        candidate: candidate.candidate,
-      },
-      id
+  // Offer
+
+  getOfferSubject = () => {
+    return (
+      this.broadcastingAgent
+        .getIndividualMessageCommSubject()
+        // @ts-ignore
+        .pipe(filter(({ data }) => data.type === "offer")) as Subject<
+        IMessage<unknown>
+      >
     );
   };
 
@@ -80,28 +61,13 @@ export class RTCMessagingAgent {
     this.broadcastingAgent.sendIndividualRequest(sessionDescription, id);
   };
 
-  onAnswerCreatedHandler = (id: string) => (
-    sessionDescription: RTCSessionDescriptionInit
-  ) => {
-    console.warn(
-      `Answer for ${id} Created in ${this.broadcastingAgent.id}`,
-      sessionDescription
-    );
-    this.OnSetLocalDescription.next([id, sessionDescription]);
-    console.log("setLocalAndSendMessage sending message", sessionDescription);
-    this.broadcastingAgent.sendIndividualRequest(sessionDescription, id);
+  onOfferHandler = (message: IMessage<unknown>) => {
+    const { id, data } = message;
+    this.OnSetRemoteDescription.next([id, data as RTCSessionDescriptionInit]);
+    // this.OnCreateAnswerSubject.next(id);
   };
 
-  getOfferSubject = () => {
-    return (
-      this.broadcastingAgent
-        .getIndividualMessageCommSubject()
-        // @ts-ignore
-        .pipe(filter(({ data }) => data.type === "offer")) as Subject<
-        IMessage<unknown>
-      >
-    );
-  };
+  // Answer
 
   getAnswerSubject = () => {
     return (
@@ -114,6 +80,25 @@ export class RTCMessagingAgent {
     );
   };
 
+  onAnswerCreatedHandler = (id: string) => (
+    sessionDescription: RTCSessionDescriptionInit
+  ) => {
+    console.warn(
+      `Answer for ${id} Created in ${this.broadcastingAgent.id}`,
+      sessionDescription
+    );
+    this.OnSetLocalDescription.next([id, sessionDescription]);
+    console.log("setLocalAndSendMessage sending message", sessionDescription);
+    this.broadcastingAgent.sendIndividualRequest(sessionDescription, id);
+  };
+
+  onAnswerHandler = (message: IMessage<unknown>) => {
+    const { id, data } = message;
+    this.OnSetRemoteDescription.next([id, data as RTCSessionDescriptionInit]);
+  };
+
+  // Candidate
+
   getCandidateSubject = () => {
     return (
       this.broadcastingAgent
@@ -123,6 +108,17 @@ export class RTCMessagingAgent {
         IMessage<unknown>
       >
     );
+  };
+
+  onCandidateHandler = (message: IMessage<unknown>) => {
+    const { id, data } = message;
+    var candidate = new RTCIceCandidate({
+      // @ts-ignore
+      sdpMLineIndex: data.label,
+      // @ts-ignore
+      candidate: data.candidate,
+    });
+    this.OnAddCandidateSubject.next([id, candidate]);
   };
 
   handleIceCandidate = (id: string) => (event: RTCPeerConnectionIceEvent) => {
@@ -140,5 +136,17 @@ export class RTCMessagingAgent {
     } else {
       console.log("End of candidates.");
     }
+  };
+
+  onCandidateCreatedHandler = (id: string) => (candidate: RTCIceCandidate) => {
+    this.broadcastingAgent.sendIndividualRequest(
+      {
+        type: "candidate",
+        label: candidate.sdpMLineIndex,
+        id: candidate.sdpMid,
+        candidate: candidate.candidate,
+      },
+      id
+    );
   };
 }
