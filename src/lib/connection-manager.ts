@@ -34,7 +34,6 @@ export class ConnectionManager {
   private connections: { [id: string]: RTCPeerConnection } = {};
 
   // Subjects
-  public OnStreamSubject = new Subject<MediaStream>();
   public OnDataChannelSubject = new Subject<RTCDataChannel>();
   public OnConnectionCreatedSubject = new Subject<
     [string, RTCPeerConnection]

@@ -4,6 +4,7 @@ import { Client } from "../lib/client";
 import { getIsLocal, getIsRemote, InitSubject } from "./init";
 
 export const ClientSubject = new BehaviorSubject<Client | null>(null);
+export const IDSubject = new BehaviorSubject<string | null>(null);
 
 const initLocal = () => {
   console.warn("Local");
@@ -15,6 +16,7 @@ const initLocal = () => {
   window.client2 = client2;
   ClientSubject.next(client1);
   ClientSubject.next(client2);
+  IDSubject.next(client1.id);
 };
 
 const initRemote = () => {

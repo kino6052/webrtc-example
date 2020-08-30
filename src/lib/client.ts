@@ -33,7 +33,6 @@ export class Client {
     this.ConnectionManager.OnConnectionCreatedSubject.subscribe(
       this.onConnectionCreatedHandler
     );
-    this.ConnectionManager.OnStreamSubject.subscribe(this.onStreamHandler);
     this.BroadcastingAgent.sendGreeting();
     console.warn("Client", this.id);
   }
