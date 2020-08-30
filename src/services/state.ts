@@ -45,6 +45,7 @@ InitSubject.subscribe(() => {
   });
   TVProgramStateSubject.subscribe((program) => {
     if (program === undefined) return;
-    updateState(program);
+    updateState({ program });
   });
+  GameStateSubject.subscribe(console.warn);
 });

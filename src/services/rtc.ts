@@ -16,14 +16,21 @@ const initLocal = () => {
   window.client2 = client2;
   ClientSubject.next(client1);
   ClientSubject.next(client2);
-  IDSubject.next(client1.id);
 };
 
 const initRemote = () => {
   console.warn("Remote");
-  ClientSubject.next(new Client());
+  const client = new Client();
+  ClientSubject.next(client);
 };
 
 InitSubject.pipe(filter(getIsRemote)).subscribe(initRemote);
 
 InitSubject.pipe(filter(getIsLocal)).subscribe(initLocal);
+
+InitSubject.subscribe(() => {
+  ClientSubject.subscribe((client) => {
+    if (!client) return;
+    IDSubject.next(client.id);
+  });
+});

@@ -18,7 +18,7 @@ export const SetNameSubject = new Subject<[string, string]>();
 const post = <T>(url: string, data: T) =>
   fetch(url, {
     method: "POST",
-    headers: { ContentType: "application/json" },
+    headers: { "Content-Type": "application/json" },
     body: JSON.stringify(data),
   }).catch(console.warn);
 

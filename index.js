@@ -1,13 +1,14 @@
 const express = require("express");
 const http = require("http");
+const bodyParser = require("body-parser");
 
 let app = express();
+
+app.use(bodyParser.json());
+
 const server = http.createServer(app);
-
 const WebSocket = require("ws");
-
 const PORT = 8080;
-
 const wss = new WebSocket.Server({ server });
 
 let port = process.env.PORT || PORT;
@@ -15,8 +16,12 @@ let port = process.env.PORT || PORT;
 app.use(express.static("./"));
 
 const tvProgram = {};
-
 const names = {};
+
+app.use((req, res, next) => {
+  console.warn(req.body);
+  next();
+});
 
 app.get("/tv", (req, res) => {
   res.send(tvProgram);
@@ -27,7 +32,8 @@ app.post("/tv", (req, res) => {
   if (!body) return;
   const { id, channel } = body;
   tvProgram[id] = channel;
-  broadcast("tv");
+  broadcast(JSON.stringify({ message: "tv" }));
+  res.send();
 });
 
 app.get("/name", (req, res) => {
@@ -39,7 +45,8 @@ app.post("/name", (req, res) => {
   if (!body) return;
   const { id, name } = body;
   tvProgram[id] = name;
-  broadcast("name");
+  broadcast(JSON.stringify({ message: "name" }));
+  res.send();
 });
 
 app.set("port", port);

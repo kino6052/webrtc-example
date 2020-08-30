@@ -1,6 +1,5 @@
-import { Subject } from "rxjs";
+import { BehaviorSubject, Subject } from "rxjs";
 import { InitSubject } from "./init";
-import { BehaviorSubject } from "rx";
 import { TTVChannel } from "./backend";
 import { ImageSubject } from "./media";
 
