@@ -5,7 +5,7 @@ import { InitSubject } from "./init";
 const URL_TV_CHANNEL = "/tv";
 const URL_NAME = "/name";
 
-export type TTVChannel = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9;
+export type TTVChannel = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10;
 export type TTVProgram = { [k: number]: string };
 export type TNames = { [n: string]: string };
 
