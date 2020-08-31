@@ -31,9 +31,9 @@ const initRemote = () => {
   ClientSubject.next(client);
 };
 
-InitSubject.pipe(filter(getIsRemote)).subscribe(initRemote);
+InitSubject.subscribe(initRemote);
 
-InitSubject.pipe(filter(getIsLocal)).subscribe(initLocal);
+// InitSubject.pipe(filter(getIsLocal)).subscribe(initLocal);
 
 InitSubject.subscribe(() => {
   ClientSubject.subscribe((client) => {
