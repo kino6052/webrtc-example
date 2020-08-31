@@ -31,7 +31,7 @@ app.post("/tv", (req, res) => {
   const body = req.body;
   if (!body) return;
   const { id, channel } = body;
-  tvProgram[id] = channel;
+  tvProgram[channel] = id;
   broadcast(JSON.stringify({ message: "tv" }));
   res.send();
 });

@@ -1,4 +1,4 @@
-import { BehaviorSubject } from "rxjs";
+import { BehaviorSubject, interval } from "rxjs";
 import { IsStreamEnabled, IsWindowLoadedSubject } from "./init";
 import { TTVChannel } from "./backend";
 import { getState } from "./state";
@@ -40,9 +40,14 @@ const streamToImageHandler = (stream: MediaStream) => {
   if (!canvas2DContext) return;
   video.srcObject = stream;
   video.play();
+};
+
+const update = () => {
+  if (!canvas2DContext) return;
   canvas2DContext.drawImage(video, 0, 0, SIZE, SIZE);
   const data = canvas.toDataURL("image/jpeg");
   const s = data.replace("data:image/jpeg;base64,", "");
+  if (!s) return;
   ImageSubject.next(s);
 };
 
@@ -67,4 +72,5 @@ IsWindowLoadedSubject.subscribe(() => {
   initializeCanvas();
   StreamToImageSubject.subscribe(onStreamToImageHandler);
   CurrentTVChannelStateSubject.subscribe(onChangeChannelHandler);
+  interval(60).subscribe(update);
 });

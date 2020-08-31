@@ -1,7 +1,8 @@
-import { BehaviorSubject } from "rxjs";
+import { BehaviorSubject, combineLatest } from "rxjs";
 import { filter } from "rxjs/operators";
 import { Client } from "../lib/client";
 import { getIsLocal, getIsRemote, InitSubject } from "./init";
+import { LocalMediaSubject } from "./media";
 
 export const ClientSubject = new BehaviorSubject<Client | null>(null);
 export const IDSubject = new BehaviorSubject<string | null>(null);
@@ -33,4 +34,11 @@ InitSubject.subscribe(() => {
     if (!client) return;
     IDSubject.next(client.id);
   });
+  combineLatest(ClientSubject, LocalMediaSubject).subscribe(
+    ([client, media]) => {
+      if (!client || !media) return;
+      console.warn(client, media);
+      client.addStream(client.id, media);
+    }
+  );
 });

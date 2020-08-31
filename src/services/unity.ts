@@ -9,11 +9,8 @@ export const CurrentTVChannelStateSubject = new BehaviorSubject<TTVChannel | nul
 );
 
 const parseMessage = (m: string) => {
-  const result = m.split(",");
-  const isOn = Boolean(result[0]);
-  const channel = Number(result[1]);
-  const curr = isOn ? (channel as TTVChannel) : null;
-  CurrentTVChannelStateSubject.next(curr);
+  const channel = Number(m);
+  CurrentTVChannelStateSubject.next((channel as TTVChannel) || null);
 };
 
 // @ts-ignore

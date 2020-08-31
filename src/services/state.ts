@@ -1,8 +1,9 @@
 import { TTVChannel, TTVProgram, TVProgramStateSubject } from "./backend";
-import { BehaviorSubject } from "rxjs";
+import { BehaviorSubject, combineLatest } from "rxjs";
 import { InitSubject } from "./init";
 import { ClientSubject, IDSubject } from "./rtc";
 import { CurrentTVChannelStateSubject } from "./unity";
+import { Client } from "../lib/client";
 
 interface IGameState {
   id: string;
@@ -21,7 +22,7 @@ const DEFAULT_STATE: IGameState = {
 const GameStateSubject = new BehaviorSubject<IGameState>(DEFAULT_STATE);
 
 export const getState = () =>
-  JSON.parse(JSON.stringify(GameStateSubject.getValue())) as IGameState;
+  ({ ...GameStateSubject.getValue() } as IGameState);
 
 const updateState = (partial: Partial<IGameState>) => {
   const prevState = getState();
@@ -30,22 +31,18 @@ const updateState = (partial: Partial<IGameState>) => {
 };
 
 InitSubject.subscribe(() => {
-  ClientSubject.subscribe((client) => {
-    if (!client) return;
-    const streams = client.streams;
-    updateState({ streams });
-  });
-  IDSubject.subscribe((id) => {
-    if (!id) return;
-    updateState({ id });
-  });
-  CurrentTVChannelStateSubject.subscribe((channel) => {
-    if (channel === null) return;
-    updateState({ channel });
-  });
-  TVProgramStateSubject.subscribe((program) => {
-    if (program === undefined) return;
-    updateState({ program });
+  combineLatest(
+    ClientSubject,
+    IDSubject,
+    CurrentTVChannelStateSubject,
+    TVProgramStateSubject
+  ).subscribe(([client, id, channel, program]) => {
+    updateState({
+      streams: client?.streams || {},
+      id: id || undefined,
+      channel: (channel as TTVChannel) || null,
+      program,
+    });
   });
   GameStateSubject.subscribe(console.warn);
 });
