@@ -19,7 +19,7 @@ const DEFAULT_STATE: IGameState = {
   program: {},
 };
 
-const GameStateSubject = new BehaviorSubject<IGameState>(DEFAULT_STATE);
+export const GameStateSubject = new BehaviorSubject<IGameState>(DEFAULT_STATE);
 
 export const getState = () =>
   ({ ...GameStateSubject.getValue() } as IGameState);

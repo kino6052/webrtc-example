@@ -1,7 +1,7 @@
 import { BehaviorSubject, interval } from "rxjs";
 import { IsStreamEnabled, IsWindowLoadedSubject } from "./init";
-import { TTVChannel } from "./backend";
-import { getState } from "./state";
+import { TTVChannel, TVProgramStateSubject } from "./backend";
+import { getState, GameStateSubject } from "./state";
 import { CurrentTVChannelStateSubject } from "./unity";
 
 export const RemoteMediaSubject = new BehaviorSubject<MediaStream | null>(null);
@@ -17,15 +17,19 @@ const video = document.createElement("video");
 const canvas2DContext = canvas.getContext("2d");
 
 export const getUserMedia = () => {
+  // navigator.mediaDevices.getUserMedia({
+  //   audio: false,
+  //   video: true,
+  // });
   navigator.mediaDevices
-    .getUserMedia({
-      audio: false,
-      video: true,
-    })
+    //@ts-ignore
+    .getDisplayMedia()
+    //@ts-ignore
     .then((stream) => {
       LocalMediaSubject.next(stream);
       IsStreamEnabled.next(true);
     })
+    //@ts-ignore
     .catch(function (e) {
       alert("getUserMedia() error: " + e.name);
     });
@@ -72,5 +76,6 @@ IsWindowLoadedSubject.subscribe(() => {
   initializeCanvas();
   StreamToImageSubject.subscribe(onStreamToImageHandler);
   CurrentTVChannelStateSubject.subscribe(onChangeChannelHandler);
+  GameStateSubject.subscribe(({ channel }) => onChangeChannelHandler(channel));
   interval(60).subscribe(update);
 });

@@ -42,13 +42,6 @@ export const addTVControls = () => {
 
 InitSubject.subscribe(() => {
   addTVControls();
-  RemoteMediaSubject.subscribe((stream) => {
-    if (!stream) return;
-    addRemoteVideo(stream);
-  });
-  ClientSubject.subscribe((client) =>
-    client?.OnStreamSubject.subscribe((message) => addRemoteVideo(message[1]))
-  );
   TVControlButtonClick.subscribe((channel) => {
     const id = IDSubject.getValue();
     if (!id) return;
