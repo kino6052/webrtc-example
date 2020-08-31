@@ -24,7 +24,7 @@ export const GameStateSubject = new BehaviorSubject<IGameState>(DEFAULT_STATE);
 export const getState = () =>
   ({ ...GameStateSubject.getValue() } as IGameState);
 
-const updateState = (partial: Partial<IGameState>) => {
+export const updateState = (partial: Partial<IGameState>) => {
   const prevState = getState();
   const newState = { ...prevState, ...partial };
   GameStateSubject.next(newState);

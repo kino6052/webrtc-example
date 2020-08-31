@@ -3,6 +3,7 @@ import { filter } from "rxjs/operators";
 import { Client } from "../lib/client";
 import { getIsLocal, getIsRemote, InitSubject } from "./init";
 import { LocalMediaSubject } from "./media";
+import { updateState } from "./state";
 
 export const ClientSubject = new BehaviorSubject<Client | null>(null);
 export const IDSubject = new BehaviorSubject<string | null>(null);
@@ -19,9 +20,14 @@ const initLocal = () => {
   ClientSubject.next(client2);
 };
 
+const onConnectionUpdateHandler = (client: Client) => {
+  client.OnStreamSubject.subscribe(() => updateState({}));
+};
+
 const initRemote = () => {
   console.warn("Remote");
   const client = new Client();
+  onConnectionUpdateHandler(client);
   ClientSubject.next(client);
 };
 
