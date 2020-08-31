@@ -25,7 +25,7 @@ combineLatest(IsWindowLoadedSubject, IsStreamEnabled, IsWebSocketConnectionOpen)
     filter(
       ([isWindowLoadedSubject, isStreamEnabled, IsWebSocketConnectionOpen]) => {
         const isRemote = getIsRemote();
-        if (!isWindowLoadedSubject || !isStreamEnabled) return false;
+        if (!isWindowLoadedSubject) return false;
         if (isRemote && !IsWebSocketConnectionOpen) return false;
         return true;
       }

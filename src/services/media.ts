@@ -42,8 +42,11 @@ const initializeCanvas = () => {
 
 const streamToImageHandler = (stream: MediaStream) => {
   if (!canvas2DContext) return;
+  video.pause();
   video.srcObject = stream;
-  video.play();
+  video.addEventListener("canplay", () => {
+    video.play();
+  });
 };
 
 const update = () => {
