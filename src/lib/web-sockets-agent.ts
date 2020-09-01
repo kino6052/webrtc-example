@@ -57,6 +57,7 @@ export class WebSocketsAgent {
 
   onCloseHandler = () => {
     this.isOpen = false;
+    this.OnCloseSubject.next();
   };
 
   sendMessage = (message: string) => {
