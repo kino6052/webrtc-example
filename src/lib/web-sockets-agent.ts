@@ -11,6 +11,7 @@ export class WebSocketsAgent {
 
   // Subjects
   public IsWebSocketReadySubject = new BehaviorSubject(false);
+  public OnCloseSubject = new Subject();
 
   constructor(private CommunicationSubject: Subject<IMessage<unknown>>) {
     const url = this.getURL();
@@ -56,7 +57,6 @@ export class WebSocketsAgent {
 
   onCloseHandler = () => {
     this.isOpen = false;
-    this.IsWebSocketReadySubject.next(this.isOpen);
   };
 
   sendMessage = (message: string) => {

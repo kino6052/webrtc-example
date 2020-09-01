@@ -1,4 +1,4 @@
-import { BehaviorSubject } from "rxjs";
+import { BehaviorSubject, Subject } from "rxjs";
 import { CommunicationSubject } from "../lib/broadcast";
 import { WebSocketsAgent } from "../lib/web-sockets-agent";
 import {
@@ -11,14 +11,18 @@ import { filter } from "rxjs/operators";
 export const WebSocketsAgentSubject = new BehaviorSubject<WebSocketsAgent | null>(
   null
 );
+export const ResetAgentSubject = new BehaviorSubject(null);
 
 IsWindowLoadedSubject.pipe(filter(() => getIsRemote())).subscribe(
   (isLoaded) => {
     if (!isLoaded) return;
-    const ws = new WebSocketsAgent(CommunicationSubject);
-    WebSocketsAgentSubject.next(ws);
-    ws.IsWebSocketReadySubject.subscribe((isReady) => {
-      IsWebSocketConnectionOpen.next(isReady);
+    ResetAgentSubject.subscribe(() => {
+      const ws = new WebSocketsAgent(CommunicationSubject);
+      WebSocketsAgentSubject.next(ws);
+      ws.IsWebSocketReadySubject.subscribe((isReady) => {
+        IsWebSocketConnectionOpen.next(isReady);
+      });
+      ws.OnCloseSubject.subscribe(() => ResetAgentSubject.next(null));
     });
   }
 );
