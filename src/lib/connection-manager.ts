@@ -31,7 +31,7 @@ const configuration = {
 
 export class ConnectionManager {
   // Connections
-  private connections: { [id: string]: RTCPeerConnection } = {};
+  public connections: { [id: string]: RTCPeerConnection } = {};
 
   // Subjects
   public OnDataChannelSubject = new Subject<RTCDataChannel>();

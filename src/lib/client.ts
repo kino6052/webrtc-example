@@ -19,7 +19,7 @@ export class Client {
     CommunicationSubject
   );
   private RTCMessagingAgent = new RTCMessagingAgent(this.BroadcastingAgent);
-  private ConnectionManager = new ConnectionManager(this.RTCMessagingAgent);
+  public ConnectionManager = new ConnectionManager(this.RTCMessagingAgent);
 
   // Subjects
   public OnDataChannelMessageSubject = new Subject<[string, string]>();

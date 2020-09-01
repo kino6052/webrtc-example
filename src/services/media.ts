@@ -3,6 +3,7 @@ import { IsStreamEnabled, IsWindowLoadedSubject } from "./init";
 import { TTVChannel, TVProgramStateSubject } from "./backend";
 import { getState, GameStateSubject } from "./state";
 import { CurrentTVChannelStateSubject } from "./unity";
+import { take } from "rxjs/operators";
 
 export const RemoteMediaSubject = new BehaviorSubject<MediaStream | null>(null);
 export const LocalMediaSubject = new BehaviorSubject<MediaStream | null>(null);
@@ -73,7 +74,7 @@ const onStreamToImageHandler = (stream: MediaStream | null) => {
   streamToImageHandler(stream);
 };
 
-IsWindowLoadedSubject.subscribe(() => {
+IsWindowLoadedSubject.pipe(take(1)).subscribe(() => {
   console.warn("Init Media");
   getUserMedia();
   initializeCanvas();

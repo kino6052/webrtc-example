@@ -37,6 +37,7 @@ InitSubject.subscribe(() => {
     CurrentTVChannelStateSubject,
     TVProgramStateSubject
   ).subscribe(([client, id, channel, program]) => {
+    console.warn(client?.ConnectionManager.connections);
     updateState({
       streams: client?.streams || {},
       id: id || undefined,
