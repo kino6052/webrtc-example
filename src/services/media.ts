@@ -24,7 +24,10 @@ export const getUserMedia = () => {
   // });
   navigator.mediaDevices
     //@ts-ignore
-    .getDisplayMedia()
+    .getDisplayMedia({
+      video: true,
+      audio: true,
+    })
     //@ts-ignore
     .then((stream) => {
       LocalMediaSubject.next(stream);
