@@ -41,12 +41,25 @@ export class Client {
 
   onConnectionCreatedHandler = (message: [string, RTCPeerConnection]) => {
     const [id, connection] = message;
-    const dataChannel = connection.createDataChannel("data-channel");
     this.addStreamToConnection(connection);
-    this.dataChannels[id] = dataChannel;
-    dataChannel.onmessage = this.onDataChannelMessageHandler(id);
     connection.ondatachannel = this.onDataChannelHandler(id);
     connection.ontrack = this.onTrackHandler(id);
+    const dataChannel = connection.createDataChannel(`data-channel-${id}`);
+    dataChannel.onopen = (ev) => alert("Opened Channel");
+    dataChannel.onerror = (ev) => alert(JSON.stringify(ev));
+    this.dataChannels[id] = dataChannel;
+    dataChannel.onmessage = this.onDataChannelMessageHandler(id);
+    console.warn(this);
+  };
+
+  onConnected = (id: string, connection: RTCPeerConnection) => {
+    connection.onconnectionstatechange = (ev) => {
+      if (connection.connectionState === "connected") {
+        console.warn(`Connection ${id}, Now Connected`);
+        const isOffer = connection.localDescription?.type === "offer";
+        if (isOffer) return;
+      }
+    };
   };
 
   // Stream
@@ -79,6 +92,16 @@ export class Client {
     const channel = this.dataChannels[id];
     if (!channel) return;
     channel.send(message);
+  };
+
+  broadcastData = (message: string) => {
+    const channels = this.dataChannels;
+    for (const id in channels) {
+      const channel = channels[id];
+      const isOpen = channel.readyState === "open";
+      if (!channel || !isOpen) continue;
+      channel.send(message);
+    }
   };
 
   onDataChannelHandler = (id: string) => (ev: RTCDataChannelEvent) => {

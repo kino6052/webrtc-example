@@ -101,10 +101,10 @@ export class ConnectionManager {
     console.warn(
       `Setting remote description in ${this.ma.broadcastingAgent.id} for ${id}`
     );
-    const connection = this.connections[id];
+    let connection = this.connections[id];
     if (!connection) {
       // Answer
-      this.onCreateAnswerHandler(id, sessionDescription);
+      connection = this.onCreateAnswerHandler(id, sessionDescription);
     } else {
       // Offer
       connection.setRemoteDescription(sessionDescription);
@@ -132,10 +132,12 @@ export class ConnectionManager {
       .catch((e) => {
         console.warn(`Couldn't create answer in ID ${id}`, e);
       });
+    return connection;
   };
 
   onAddCandidateHandler = (message: [string, RTCIceCandidate]) => {
     const [id, candidate] = message;
+    console.warn(`Add Candidate`, candidate);
     const connection = this.connections[id];
     if (!connection) return;
     connection.addIceCandidate(candidate);
