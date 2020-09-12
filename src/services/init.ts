@@ -1,14 +1,15 @@
 import { BehaviorSubject, Subject, combineLatest } from "rxjs";
 import { filter, distinctUntilChanged, skip } from "rxjs/operators";
+import { DebugSubject } from "../utils";
 
-const _InitSubject = new BehaviorSubject<boolean>(false);
-export const InitSubject = _InitSubject.pipe(skip(1), distinctUntilChanged());
+export const InitSubject = new Subject();
 export const IsStreamEnabled = new BehaviorSubject<boolean>(false);
 export const IsWebSocketConnectionOpen = new BehaviorSubject<boolean>(false);
 export const EnvironmentSubject = new BehaviorSubject<"local" | "remote">(
   "local"
 );
 export const IsWindowLoadedSubject = new BehaviorSubject<boolean>(false);
+export const IsGameLoadedSubject = new BehaviorSubject(false);
 
 export const getIsRemote = () => EnvironmentSubject.getValue() === "remote";
 export const getIsLocal = () => EnvironmentSubject.getValue() === "local";
@@ -20,19 +21,25 @@ window.addEventListener("load", () => {
   IsWindowLoadedSubject.next(true);
 });
 
-combineLatest(IsWindowLoadedSubject, IsStreamEnabled, IsWebSocketConnectionOpen)
+combineLatest([
+  IsWindowLoadedSubject,
+  IsGameLoadedSubject,
+  IsWebSocketConnectionOpen,
+])
   .pipe(
     filter(
-      ([isWindowLoadedSubject, isStreamEnabled, IsWebSocketConnectionOpen]) => {
+      ([isWindowLoadedSubject, isGameLoaded, IsWebSocketConnectionOpen]) => {
         const isRemote = getIsRemote();
-        if (!isWindowLoadedSubject || !isStreamEnabled) return false;
+        if (!isWindowLoadedSubject || !isGameLoaded) return false;
         if (isRemote && !IsWebSocketConnectionOpen) return false;
         return true;
       }
     )
   )
-  .subscribe(() => _InitSubject.next(true));
+  .subscribe(() => InitSubject.next());
 
 InitSubject.subscribe(() => {
-  console.warn("INIT!");
+  DebugSubject.next("INIT!");
 });
+
+EnvironmentSubject.next("local");

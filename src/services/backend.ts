@@ -1,5 +1,6 @@
 import { BehaviorSubject, Subject } from "rxjs";
 import { CommunicationSubject } from "../lib/broadcast";
+import { DebugSubject } from "../utils";
 import { InitSubject } from "./init";
 
 const URL_TV_CHANNEL = "/tv";
@@ -20,12 +21,12 @@ const post = <T>(url: string, data: T) =>
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(data),
-  }).catch(console.warn);
+  }).catch(DebugSubject.next);
 
 const get = (url: string) =>
   fetch(url)
     .then((response) => response.json())
-    .catch(console.warn);
+    .catch(DebugSubject.next);
 
 const sendTVChannel = (id: string, channel: TTVChannel) =>
   post(URL_TV_CHANNEL, {

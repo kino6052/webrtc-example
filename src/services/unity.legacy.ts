@@ -4,33 +4,18 @@ import { InitSubject } from "./init";
 import { ImageSubject } from "./media";
 import { filter } from "rxjs/operators";
 import { IDSubject, ClientSubject } from "./rtc";
+import { IMessage } from "../shared/messaging";
+import { DebugSubject } from "../utils";
 
 export const OnUnityMessageSubject = new Subject<string>();
 export const CurrentTVChannelStateSubject = new BehaviorSubject<TTVChannel | null>(
-  null
+  1
 );
 export const PositionStateSubject = new Subject<string>();
+export const SendMessageToUnitySubject = new Subject<IMessage>();
 
-const channelMessageHandler = (m: string) => {
-  const [_, channel] = m.split(",");
-  const _channel = Number(channel) || "";
-  CurrentTVChannelStateSubject.next((_channel as TTVChannel) || null);
-};
-
-const positionMessageHandler = (m: string) => {
-  console.warn(m);
-  PositionStateSubject.next(m);
-};
-
-const getIsChannelMessage = (m: string) => {
-  const [type] = m.split(",");
-  return type === "channel";
-};
-
-const getIsPositionMessage = (m: string) => {
-  const [type] = m.split(",");
-  return type === "position";
-};
+const MANAGER = "Manager";
+const ON_MESSAGE = "OnMessage";
 
 // @ts-ignore
 window.sendUnityMessage = (message: string) => {
@@ -44,7 +29,36 @@ const sendToUnity = (object: string, method: string, message: string) => {
   unityInstance.SendMessage(object, method, message);
 };
 
-const MANAGER = "Manager";
+const sendMessageToUnityHandler = (message: IMessage) => {
+  DebugSubject.next(["Send To Unity", message]);
+  const messageString = JSON.stringify(message);
+  sendToUnity(MANAGER, ON_MESSAGE, messageString);
+};
+
+SendMessageToUnitySubject.subscribe(sendMessageToUnityHandler);
+
+// Legacy
+const channelMessageHandler = (m: string) => {
+  const [_, channel] = m.split(",");
+  const _channel = Number(channel) || "";
+  CurrentTVChannelStateSubject.next((_channel as TTVChannel) || null);
+};
+
+const positionMessageHandler = (m: string) => {
+  DebugSubject.next(m);
+  PositionStateSubject.next(m);
+};
+
+const getIsChannelMessage = (m: string) => {
+  const [type] = m.split(",");
+  return type === "channel";
+};
+
+const getIsPositionMessage = (m: string) => {
+  const [type] = m.split(",");
+  return type === "position";
+};
+
 const SEND_TEXTURE = "SendTexture";
 const UPDATE_POSITION_BY_ID = "UpdatePositionById";
 
@@ -86,16 +100,16 @@ const dataChannelMessageHandler = (message: [string, string]) => {
   updatePositionById(id, "Player", x, y, z, yAngle);
 };
 
-InitSubject.subscribe(() => {
-  ImageSubject.subscribe(imageStreamHandler);
-  OnUnityMessageSubject.pipe(filter(getIsChannelMessage)).subscribe(
-    channelMessageHandler
-  );
-  OnUnityMessageSubject.pipe(filter(getIsPositionMessage)).subscribe(
-    positionMessageHandler
-  );
-  PositionStateSubject.subscribe(positionChangeHandler);
-  ClientSubject.getValue()?.OnDataChannelMessageSubject.subscribe(
-    dataChannelMessageHandler
-  );
-});
+// InitSubject.subscribe(() => {
+//   ImageSubject.subscribe(imageStreamHandler);
+//   OnUnityMessageSubject.pipe(filter(getIsChannelMessage)).subscribe(
+//     channelMessageHandler
+//   );
+//   OnUnityMessageSubject.pipe(filter(getIsPositionMessage)).subscribe(
+//     positionMessageHandler
+//   );
+//   PositionStateSubject.subscribe(positionChangeHandler);
+//   ClientSubject.getValue()?.OnDataChannelMessageSubject.subscribe(
+//     dataChannelMessageHandler
+//   );
+// });

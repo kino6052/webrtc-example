@@ -2,8 +2,9 @@ import { TTVChannel, TTVProgram, TVProgramStateSubject } from "./backend";
 import { BehaviorSubject, combineLatest } from "rxjs";
 import { InitSubject } from "./init";
 import { ClientSubject, IDSubject } from "./rtc";
-import { CurrentTVChannelStateSubject } from "./unity";
+import { CurrentTVChannelStateSubject } from "./unity.legacy";
 import { Client } from "../lib/client";
+import { DebugSubject } from "../utils";
 
 interface IGameState {
   id: string;
@@ -31,13 +32,13 @@ export const updateState = (partial: Partial<IGameState>) => {
 };
 
 InitSubject.subscribe(() => {
-  combineLatest(
+  combineLatest([
     ClientSubject,
     IDSubject,
     CurrentTVChannelStateSubject,
-    TVProgramStateSubject
-  ).subscribe(([client, id, channel, program]) => {
-    console.warn(client?.ConnectionManager.connections);
+    TVProgramStateSubject,
+  ]).subscribe(([client, id, channel, program]) => {
+    DebugSubject.next(client?.ConnectionManager.connections);
     updateState({
       streams: client?.streams || {},
       id: id || undefined,
@@ -45,5 +46,5 @@ InitSubject.subscribe(() => {
       program,
     });
   });
-  GameStateSubject.subscribe(console.warn);
+  GameStateSubject.subscribe((state) => DebugSubject.next(state));
 });

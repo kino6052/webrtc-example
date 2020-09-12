@@ -3,7 +3,7 @@ import { InitSubject } from "./init";
 import { RemoteMediaSubject } from "./media";
 import { ClientSubject, IDSubject } from "./rtc";
 import { TTVChannel, UseTVChannelSubject } from "./backend";
-import { CurrentTVChannelStateSubject } from "./unity";
+import { CurrentTVChannelStateSubject } from "./unity.legacy";
 
 export const RequestClickSubject1 = new Subject();
 export const RequestClickSubject2 = new Subject();
@@ -40,11 +40,11 @@ export const addTVControls = () => {
   }
 };
 
-InitSubject.subscribe(() => {
-  addTVControls();
-  TVControlButtonClick.subscribe((channel) => {
-    const id = IDSubject.getValue();
-    if (!id) return;
-    UseTVChannelSubject.next([id, channel]);
-  });
-});
+// InitSubject.subscribe(() => {
+//   addTVControls();
+//   TVControlButtonClick.subscribe((channel) => {
+//     const id = IDSubject.getValue();
+//     if (!id) return;
+//     UseTVChannelSubject.next([id, channel]);
+//   });
+// });

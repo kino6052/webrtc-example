@@ -1,4 +1,4 @@
-import { generateId } from "../utils";
+import { DebugSubject, generateId } from "../utils";
 import { ConnectionManager } from "./connection-manager";
 import { BroadcastingAgent, CommunicationSubject } from "./broadcast";
 import { RTCMessagingAgent } from "./rtc-messaging-agent";
@@ -34,7 +34,7 @@ export class Client {
       this.onConnectionCreatedHandler
     );
     this.BroadcastingAgent.sendGreeting();
-    console.warn("Client", this.id);
+    DebugSubject.next(["Client", this.id]);
   }
 
   // Connection
@@ -45,17 +45,17 @@ export class Client {
     connection.ondatachannel = this.onDataChannelHandler(id);
     connection.ontrack = this.onTrackHandler(id);
     const dataChannel = connection.createDataChannel(`data-channel-${id}`);
-    dataChannel.onopen = (ev) => alert("Opened Channel");
-    dataChannel.onerror = (ev) => alert(JSON.stringify(ev));
+    dataChannel.onopen = (ev) => DebugSubject.next("Opened Channel");
+    dataChannel.onerror = (ev) => DebugSubject.next(JSON.stringify(ev));
     this.dataChannels[id] = dataChannel;
     dataChannel.onmessage = this.onDataChannelMessageHandler(id);
-    console.warn(this);
+    DebugSubject.next(this);
   };
 
   onConnected = (id: string, connection: RTCPeerConnection) => {
     connection.onconnectionstatechange = (ev) => {
       if (connection.connectionState === "connected") {
-        console.warn(`Connection ${id}, Now Connected`);
+        DebugSubject.next(`Connection ${id}, Now Connected`);
         const isOffer = connection.localDescription?.type === "offer";
         if (isOffer) return;
       }
@@ -80,7 +80,7 @@ export class Client {
   };
 
   onTrackHandler = (id: string) => (ev: RTCTrackEvent) => {
-    console.warn(`ID: ${id}, On Track Handler`);
+    DebugSubject.next(`ID: ${id}, On Track Handler`);
     const stream = ev.streams[0];
     this.addStream(id, stream);
     this.OnStreamSubject.next([id, stream]);
@@ -105,7 +105,7 @@ export class Client {
   };
 
   onDataChannelHandler = (id: string) => (ev: RTCDataChannelEvent) => {
-    console.warn(`ID: ${id}, On Data Channel Handler`);
+    DebugSubject.next(`ID: ${id}, On Data Channel Handler`);
     const dataChannel = ev.channel;
     if (!dataChannel) return;
     dataChannel.onmessage = this.onDataChannelMessageHandler(id);
@@ -120,6 +120,6 @@ export class Client {
   };
 
   onDataChannelMessageSubjectHandler = (message: [string, string]) => {
-    console.warn(message);
+    DebugSubject.next(message);
   };
 }

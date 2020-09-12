@@ -1,9 +1,10 @@
-import { BehaviorSubject, interval } from "rxjs";
+import { BehaviorSubject, interval, Subject } from "rxjs";
+import { take, takeWhile } from "rxjs/operators";
+import { DebugSubject } from "../utils";
+import { TTVChannel } from "./backend";
 import { IsStreamEnabled, IsWindowLoadedSubject } from "./init";
-import { TTVChannel, TVProgramStateSubject } from "./backend";
-import { getState, GameStateSubject } from "./state";
-import { CurrentTVChannelStateSubject } from "./unity";
-import { take } from "rxjs/operators";
+import { GameStateSubject, getState } from "./state";
+import { CurrentTVChannelStateSubject } from "./unity.legacy";
 
 export const RemoteMediaSubject = new BehaviorSubject<MediaStream | null>(null);
 export const LocalMediaSubject = new BehaviorSubject<MediaStream | null>(null);
@@ -11,6 +12,7 @@ export const ImageSubject = new BehaviorSubject<string | null>(null);
 export const StreamToImageSubject = new BehaviorSubject<MediaStream | null>(
   null
 );
+export const ShareScreenSubject = new Subject();
 
 const SIZE = 512;
 const canvas = document.createElement("canvas");
@@ -35,7 +37,7 @@ export const getUserMedia = () => {
     })
     //@ts-ignore
     .catch(function (e) {
-      alert("getUserMedia() error: " + e.name);
+      DebugSubject.next("getUserMedia() error: " + e.name);
     });
 };
 
@@ -77,9 +79,14 @@ const onStreamToImageHandler = (stream: MediaStream | null) => {
   streamToImageHandler(stream);
 };
 
-IsWindowLoadedSubject.pipe(take(1)).subscribe(() => {
-  console.warn("Init Media");
+// When User Clicks on Share Screen
+// Currently Can't Turn Sharing Off, Have to Reload
+ShareScreenSubject.pipe(take(1)).subscribe(() => {
+  DebugSubject.next("Init Media");
   getUserMedia();
+});
+
+IsWindowLoadedSubject.pipe(take(1)).subscribe(() => {
   initializeCanvas();
   StreamToImageSubject.subscribe(onStreamToImageHandler);
   CurrentTVChannelStateSubject.subscribe(onChangeChannelHandler);

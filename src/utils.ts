@@ -1,3 +1,6 @@
+import { BehaviorSubject, Subject } from "rxjs";
+import { filter } from "rxjs/operators";
+
 const getRandomNumbers = (length: number) => {
   const value = Array.from(
     Math.round(Math.random() * Math.pow(10, length)).toString()
@@ -14,3 +17,12 @@ export const generateId = (amount: number, length: number) =>
     .fill(0)
     .map((a, i, b) => `${i && "-"}${getRandomNumbers(length)}`)
     .join("");
+
+export const EnvironmentSubject = new BehaviorSubject<
+  "development" | "production"
+>("development");
+export const DebugSubject = new Subject<any>();
+
+DebugSubject.pipe(
+  filter(() => EnvironmentSubject.getValue() === "development")
+).subscribe(console.warn);

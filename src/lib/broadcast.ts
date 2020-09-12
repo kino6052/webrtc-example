@@ -1,6 +1,6 @@
 import { Subject } from "rxjs";
 import { filter } from "rxjs/operators";
-import { generateId } from "../utils";
+import { DebugSubject, generateId } from "../utils";
 import { Client } from "./client";
 
 type TCommunicationType = "greeting" | "farewell" | "individual";
@@ -42,7 +42,7 @@ export class BroadcastingAgent {
     this.getCommSubject().pipe(filter(({ to }) => to === this.id));
 
   messageHandler = (message: IMessage<unknown>) => {
-    console.warn(message);
+    DebugSubject.next(message);
   };
 
   sendIndividualRequest = <T>(data: T, to: string) => {
@@ -79,7 +79,7 @@ export class BroadcastingAgent {
     const participants = this.getParticipants();
     if (type !== "greeting") return;
     if (participants.includes(id)) return;
-    console.warn(`ID: ${this.id}, Add Participant`);
+    DebugSubject.next(`ID: ${this.id}, Add Participant`);
     this.addParticipant(id);
     setTimeout(this.sendGreeting, 1000);
   };

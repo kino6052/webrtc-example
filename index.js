@@ -19,7 +19,7 @@ const tvProgram = {};
 const names = {};
 
 app.use((req, res, next) => {
-  console.warn(req.body);
+  DebugSubject.next(req.body);
   next();
 });
 
@@ -53,7 +53,7 @@ app.set("port", port);
 
 server.listen(port);
 
-console.warn("WebSocket Server Started");
+DebugSubject.next("WebSocket Server Started");
 
 const broadcast = (message) => {
   wss.clients.forEach((client) => {
@@ -62,9 +62,9 @@ const broadcast = (message) => {
 };
 
 wss.on("connection", function connection(ws) {
-  console.warn("connection!");
+  DebugSubject.next("connection!");
   ws.on("message", function incoming(message) {
-    console.warn(message);
+    DebugSubject.next(message);
     wss.clients.forEach((client) => {
       client.send(message);
     });

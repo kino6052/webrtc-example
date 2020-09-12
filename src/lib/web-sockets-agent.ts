@@ -1,6 +1,7 @@
 import { filter } from "rxjs/operators";
 import { BehaviorSubject, Subject } from "rxjs";
 import { IMessage } from "./broadcast";
+import { DebugSubject } from "../utils";
 
 export class WebSocketsAgent {
   private ws: WebSocket;
@@ -43,14 +44,14 @@ export class WebSocketsAgent {
   };
 
   onMessageHandler = (event: MessageEvent) => {
-    console.warn(event.data);
+    DebugSubject.next(event.data);
     const message = JSON.parse(event.data) as IMessage<unknown>;
     this.canSend = false;
     this.CommunicationSubject.next(message);
   };
 
   onOpenHandler = () => {
-    console.warn("WS is Open");
+    DebugSubject.next("WS is Open");
     this.isOpen = true;
     this.IsWebSocketReadySubject.next(this.isOpen);
   };
@@ -61,7 +62,7 @@ export class WebSocketsAgent {
   };
 
   sendMessage = (message: string) => {
-    console.warn(message);
+    DebugSubject.next(message);
     this.ws.send(message);
   };
 }

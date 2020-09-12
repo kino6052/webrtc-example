@@ -1,6 +1,7 @@
 import { BehaviorSubject, combineLatest } from "rxjs";
 import { filter } from "rxjs/operators";
 import { Client } from "../lib/client";
+import { DebugSubject } from "../utils";
 import { getIsLocal, getIsRemote, InitSubject } from "./init";
 import { LocalMediaSubject } from "./media";
 import { updateState } from "./state";
@@ -9,7 +10,7 @@ export const ClientSubject = new BehaviorSubject<Client | null>(null);
 export const IDSubject = new BehaviorSubject<string | null>(null);
 
 const initLocal = () => {
-  console.warn("Local");
+  DebugSubject.next("Local");
   const client1 = new Client();
   const client2 = new Client();
   // @ts-ignore
@@ -25,7 +26,7 @@ const onConnectionUpdateHandler = (client: Client) => {
 };
 
 const initRemote = () => {
-  console.warn("Remote");
+  DebugSubject.next("Remote");
   const client = new Client();
   onConnectionUpdateHandler(client);
   ClientSubject.next(client);
@@ -40,10 +41,10 @@ InitSubject.subscribe(() => {
     if (!client) return;
     IDSubject.next(client.id);
   });
-  combineLatest(ClientSubject, LocalMediaSubject).subscribe(
+  combineLatest([ClientSubject, LocalMediaSubject]).subscribe(
     ([client, media]) => {
       if (!client || !media) return;
-      console.warn(client, media);
+      DebugSubject.next([client, media]);
       client.addStream(client.id, media);
     }
   );

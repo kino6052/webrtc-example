@@ -1,5 +1,6 @@
 import { Subject } from "rxjs";
 import { filter } from "rxjs/operators";
+import { DebugSubject } from "../utils";
 import { BroadcastingAgent, IMessage } from "./broadcast";
 
 export class RTCMessagingAgent {
@@ -50,10 +51,10 @@ export class RTCMessagingAgent {
   onOfferCreatedHandler = (id: string) => (
     sessionDescription: RTCSessionDescriptionInit
   ) => {
-    console.warn(
+    DebugSubject.next([
       `Offer for ${id} Created in ${this.broadcastingAgent.id}`,
-      sessionDescription
-    );
+      sessionDescription,
+    ]);
     this.OnSetLocalDescription.next([id, sessionDescription]);
     console.log("setLocalAndSendMessage sending message", sessionDescription);
     this.broadcastingAgent.sendIndividualRequest(sessionDescription, id);
@@ -79,10 +80,10 @@ export class RTCMessagingAgent {
   onAnswerCreatedHandler = (id: string) => (
     sessionDescription: RTCSessionDescriptionInit
   ) => {
-    console.warn(
+    DebugSubject.next([
       `Answer for ${id} Created in ${this.broadcastingAgent.id}`,
-      sessionDescription
-    );
+      sessionDescription,
+    ]);
     this.OnSetLocalDescription.next([id, sessionDescription]);
     console.log("setLocalAndSendMessage sending message", sessionDescription);
     this.broadcastingAgent.sendIndividualRequest(sessionDescription, id);
