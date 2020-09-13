@@ -1,5 +1,5 @@
 import { BehaviorSubject, interval, Subject } from "rxjs";
-import { take, takeWhile } from "rxjs/operators";
+import { filter, take, takeWhile } from "rxjs/operators";
 import { DebugSubject } from "../utils";
 import { TTVChannel } from "./backend";
 import { IsStreamEnabled, IsWindowLoadedSubject } from "./init";
@@ -14,7 +14,7 @@ export const StreamToImageSubject = new BehaviorSubject<MediaStream | null>(
 );
 export const ShareScreenSubject = new Subject();
 
-const SIZE = 512;
+const SIZE = 1024;
 const canvas = document.createElement("canvas");
 const video = document.createElement("video");
 const canvas2DContext = canvas.getContext("2d");
@@ -62,6 +62,7 @@ const update = () => {
   const s = data.replace("data:image/jpeg;base64,", "");
   if (!s) return;
   ImageSubject.next(s);
+  DebugSubject.next(s.substr(0, 100));
 };
 
 const onChangeChannelHandler = (channel: TTVChannel | null) => {
@@ -81,7 +82,9 @@ const onStreamToImageHandler = (stream: MediaStream | null) => {
 
 // When User Clicks on Share Screen
 // Currently Can't Turn Sharing Off, Have to Reload
-ShareScreenSubject.pipe(take(1)).subscribe(() => {
+ShareScreenSubject.pipe(
+  filter(() => LocalMediaSubject.getValue() === null)
+).subscribe(() => {
   DebugSubject.next("Init Media");
   getUserMedia();
 });

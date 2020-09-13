@@ -16,7 +16,6 @@ export const PositionMessageSubject = new Subject<IPositionMessage>();
 export const ImageDataMessageSubject = new Subject<IImageDataMessage>();
 
 const handleIncomingMessage = ([id, message]: [string, string]) => {
-  DebugSubject.next(["test", message]);
   let m: (IMessage & { id: string }) | null = null;
   try {
     m = JSON.parse(message);
@@ -42,6 +41,6 @@ MessageSubject.pipe(
   PositionMessageSubject.next((m as unknown) as IPositionMessage)
 );
 
-ImageSubject.pipe(map(imageSubjectHandler)).subscribe(
-  ImageDataMessageSubject.next
+ImageSubject.pipe(map(imageSubjectHandler)).subscribe((m) =>
+  ImageDataMessageSubject.next(m)
 );

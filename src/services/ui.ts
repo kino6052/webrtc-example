@@ -1,6 +1,6 @@
 import { Subject } from "rxjs";
 import { InitSubject } from "./init";
-import { RemoteMediaSubject } from "./media";
+import { LocalMediaSubject, RemoteMediaSubject } from "./media";
 import { ClientSubject, IDSubject } from "./rtc";
 import { TTVChannel, UseTVChannelSubject } from "./backend";
 import { CurrentTVChannelStateSubject } from "./unity.legacy";
@@ -16,7 +16,17 @@ const addLocalVideo = (stream: MediaStream) => {
   localVideo.srcObject = stream;
 };
 
-export const addRemoteVideo = (stream: MediaStream) => {
+const appendLocal = (stream: MediaStream) => {
+  const videoElement = document.createElement("video");
+  videoElement.setAttribute("autoplay", "");
+  videoElement.setAttribute("playsinline", "");
+  videoElement.srcObject = stream;
+  const body = document.querySelector("body");
+  body?.appendChild(videoElement);
+};
+
+export const addRemoteVideo = (stream: MediaStream | null) => {
+  if (!stream) return;
   const videoElement = document.createElement("video");
   videoElement.setAttribute("autoplay", "");
   videoElement.setAttribute("playsinline", "");

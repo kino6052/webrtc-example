@@ -12,7 +12,6 @@ ClientSubject.pipe(
   filter((m) => !!m),
   take(1)
 ).subscribe((client) => {
-  DebugSubject.next("DATACHANEL");
   client!.OnDataChannelMessageSubject.subscribe((m) => MessageSubject.next(m));
   PositionMessageSubject.pipe(map(messageToJson)).subscribe((m) =>
     client!.broadcastData(m)
