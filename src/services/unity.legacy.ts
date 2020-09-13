@@ -13,6 +13,7 @@ export const CurrentTVChannelStateSubject = new BehaviorSubject<TTVChannel | nul
 );
 export const PositionStateSubject = new Subject<string>();
 export const SendMessageToUnitySubject = new Subject<IMessage>();
+export const MakeFullScreenSubject = new Subject();
 
 const MANAGER = "Manager";
 const ON_MESSAGE = "OnMessage";
@@ -35,7 +36,15 @@ const sendMessageToUnityHandler = (message: IMessage) => {
   sendToUnity(MANAGER, ON_MESSAGE, messageString);
 };
 
+const makeFullScreen = () => {
+  // @ts-ignore
+  if (!unityInstance) return;
+  // @ts-ignore
+  unityInstance.SetFullscreen(1);
+};
+
 SendMessageToUnitySubject.subscribe(sendMessageToUnityHandler);
+MakeFullScreenSubject.subscribe(makeFullScreen);
 
 // Legacy
 const channelMessageHandler = (m: string) => {

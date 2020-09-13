@@ -2,7 +2,11 @@ import {
   PositionMessageSubject,
   ImageDataMessageSubject,
 } from "../services/unity-messages-incoming";
-import { SendMessageToUnitySubject } from "../services/unity.legacy";
+import { FullScreenMessageSubject } from "../services/unity-messages-outgoing";
+import {
+  MakeFullScreenSubject,
+  SendMessageToUnitySubject,
+} from "../services/unity.legacy";
 
 PositionMessageSubject.subscribe((message) =>
   SendMessageToUnitySubject.next(message)
@@ -10,3 +14,4 @@ PositionMessageSubject.subscribe((message) =>
 ImageDataMessageSubject.subscribe((message) =>
   SendMessageToUnitySubject.next(message)
 );
+FullScreenMessageSubject.subscribe(() => MakeFullScreenSubject.next());
