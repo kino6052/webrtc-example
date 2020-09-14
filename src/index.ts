@@ -1,7 +1,17 @@
-import "./services/messaging/outgoing/integration/backend";
-import "./services/messaging/rtc/integration/incoming";
-import "./integration/outgoing-init";
-import "./integration/outgoing-media";
-import "./services/unity/integration/unity-stream";
-import "./services/messaging/incoming/integration/unity";
-import "./services/unity/integration/outgoing";
+// init
+import "./services/init";
+
+// backend
+import "./services/backend";
+
+// media
+import "./services/media";
+
+// messaging
+import "./services/messaging";
+
+// state
+import "./services/state";
+
+// unity
+import "./services/unity";
