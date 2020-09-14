@@ -2,9 +2,8 @@ import { DebugSubject, generateId } from "../utils";
 import { ConnectionManager } from "./connection-manager";
 import { BroadcastingAgent, CommunicationSubject } from "./broadcast";
 import { RTCMessagingAgent } from "./rtc-messaging-agent";
-import { addRemoteVideo } from "../services/ui";
 import { Subject } from "rxjs";
-import { LocalMediaSubject } from "../services/media";
+import { LocalMediaSubject_ } from "../services/media/media";
 
 export class Client {
   public id = generateId(4, 4);
@@ -65,7 +64,7 @@ export class Client {
   // Stream
 
   addStreamToConnection = (connection: RTCPeerConnection) => {
-    const stream = LocalMediaSubject.getValue();
+    const stream = LocalMediaSubject_.getValue();
     if (!stream) return;
     stream.getTracks().forEach((t) => connection.addTrack(t, stream));
   };
@@ -73,10 +72,6 @@ export class Client {
   addStream = (id: string, stream: MediaStream) => {
     if (!this.streams[id]) this.streams[id] = [];
     this.streams[id].push(stream);
-  };
-
-  onStreamHandler = (stream: MediaStream) => {
-    addRemoteVideo(stream);
   };
 
   onTrackHandler = (id: string) => (ev: RTCTrackEvent) => {

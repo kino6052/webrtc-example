@@ -1,13 +1,7 @@
-import "./services/init";
-import "./services/media";
-import "./services/rtc";
-import "./services/ui";
-import "./services/ws";
-
-import "./integration/message-backend";
-import "./integration/unity-datachannel";
-import "./integration/unity-init";
-import "./integration/unity-media";
-import "./integration/unity-stream";
-import "./integration/unity-unity";
-import "./integration/unity-outgoing";
+import "./services/messaging/outgoing/integration/backend";
+import "./services/messaging/rtc/integration/incoming";
+import "./integration/outgoing-init";
+import "./integration/outgoing-media";
+import "./services/unity/integration/unity-stream";
+import "./services/messaging/incoming/integration/unity";
+import "./services/unity/integration/outgoing";
