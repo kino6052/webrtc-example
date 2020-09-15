@@ -1,10 +1,12 @@
 import { BehaviorSubject, Subject } from "rxjs";
+import { filter } from "rxjs/operators";
 import { IMessage, TTVChannel } from "../../shared/definitions";
 
 // Input
 export const _CurrentTVChannelStateSubject = new BehaviorSubject<TTVChannel | null>(
   1
 );
+export const _CanSendMessages = new BehaviorSubject<boolean>(true);
 export const _SendMessageToUnitySubject = new Subject<IMessage>();
 export const _MakeFullScreenSubject = new Subject();
 
@@ -43,5 +45,7 @@ const makeFullScreen = () => {
 window.sendUnityMessage = (message: string) => {
   UnityMessageSubject_.next(message);
 };
-_SendMessageToUnitySubject.subscribe(sendMessageToUnityHandler);
+_SendMessageToUnitySubject
+  .pipe(filter(() => _CanSendMessages.getValue()))
+  .subscribe(sendMessageToUnityHandler);
 _MakeFullScreenSubject.subscribe(makeFullScreen);

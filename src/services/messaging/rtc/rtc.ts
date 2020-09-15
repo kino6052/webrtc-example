@@ -3,7 +3,10 @@ import { Client } from "../../../lib/client";
 
 // Input
 export const _InitSubject = new Subject();
-export const _LocalMediaStream = new BehaviorSubject<MediaStream | null>(null);
+export const _BroadcastSubject = new Subject<string>();
+export const _LocalMediaStreamSubject = new BehaviorSubject<MediaStream | null>(
+  null
+);
 
 // Output
 export const ClientSubject_ = new BehaviorSubject<Client | null>(null);
@@ -31,11 +34,17 @@ _InitSubject.subscribe(() => {
     if (!client) return;
     IDSubject_.next(client.id);
   });
-  combineLatest([ClientSubject_, _LocalMediaStream]).subscribe(
+  combineLatest([ClientSubject_, _LocalMediaStreamSubject]).subscribe(
     ([client, media]) => {
       if (!client || !media) return;
       DebugSubject_.next([client, media]);
       client.addStream(client.id, media);
     }
   );
+});
+
+_BroadcastSubject.subscribe((message) => {
+  const client = ClientSubject_.getValue();
+  if (!client) return;
+  client.broadcastData(message);
 });
