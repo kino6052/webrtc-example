@@ -1,4 +1,6 @@
-import { _IsGameLoadedSubject } from "../../../init/init";
-import { StartMessageSubject_ } from "../outgoing";
+import { InitService } from "../../../init/init";
+import { OutgoingMessageService } from "../outgoing";
 
-StartMessageSubject_.subscribe(() => _IsGameLoadedSubject.next(true));
+OutgoingMessageService.StartMessageSubject_.subscribe(() =>
+  InitService._IsGameLoadedSubject.next(true)
+);

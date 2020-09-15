@@ -1,30 +1,58 @@
-import { BehaviorSubject, Subject } from "rxjs";
 import { WebSocketsAgent } from "../../../lib/web-sockets-agent";
-import { filter } from "rxjs/operators";
 import { IMessage } from "../../../lib/broadcast";
+import { switchMap } from "rxjs/internal/operators/switchMap";
+import { Subject } from "rxjs/internal/Subject";
+import { BehaviorSubject } from "rxjs/internal/BehaviorSubject";
+import { filter } from "rxjs/internal/operators/filter";
 
 // Input
-export const _CommunicationSubject = new Subject<IMessage<unknown>>();
-export const _IsWindowLoadedSubject = new Subject();
-export const _IsRemoteSubject = new BehaviorSubject<boolean>(false);
+const _CommunicationSubject = new Subject<IMessage<unknown>>();
+const _IsWindowLoadedSubject = new Subject();
+const _IsRemoteSubject = new BehaviorSubject<boolean>(false);
 
 // Output
-export const WebSocketsAgentSubject_ = new BehaviorSubject<WebSocketsAgent | null>(
+const WebSocketsAgentSubject_ = new BehaviorSubject<WebSocketsAgent | null>(
   null
 );
-export const ResetAgentSubject_ = new BehaviorSubject(null);
-export const IsWebSocketConnectionOpen_ = new BehaviorSubject(false);
+const ResetAgentSubject_ = new BehaviorSubject(null);
+const IsWebSocketConnectionOpen_ = new BehaviorSubject(false);
 
+// Methods
+const init = () => {
+  const ws = new WebSocketsAgent(_CommunicationSubject);
+  WebSocketsAgentSubject_.next(ws);
+};
+
+const onWebSocketReadyHandler = (isReady: boolean) => {
+  IsWebSocketConnectionOpen_.next(isReady);
+};
+
+const onWebSocketCloseHandler = () => ResetAgentSubject_.next(null);
+
+// Subscriptions
 _IsWindowLoadedSubject
-  .pipe(filter(() => _IsRemoteSubject.getValue()))
-  .subscribe((isLoaded) => {
-    if (!isLoaded) return;
-    ResetAgentSubject_.subscribe(() => {
-      const ws = new WebSocketsAgent(_CommunicationSubject);
-      WebSocketsAgentSubject_.next(ws);
-      ws.IsWebSocketReadySubject.subscribe((isReady) => {
-        IsWebSocketConnectionOpen_.next(isReady);
-      });
-      ws.OnCloseSubject.subscribe(() => ResetAgentSubject_.next(null));
-    });
-  });
+  .pipe(switchMap(() => ResetAgentSubject_))
+  .subscribe(init);
+
+WebSocketsAgentSubject_.pipe(
+  filter((ws) => !!ws),
+  switchMap((ws) => ws!.IsWebSocketReadySubject)
+).subscribe(onWebSocketReadyHandler);
+
+WebSocketsAgentSubject_.pipe(
+  filter((ws) => !!ws),
+  switchMap((ws) => ws!.OnCloseSubject)
+).subscribe(onWebSocketCloseHandler);
+
+// Exports
+export class WSService {
+  //Input
+  static _CommunicationSubject = _CommunicationSubject;
+  static _IsWindowLoadedSubject = _IsWindowLoadedSubject;
+  static _IsRemoteSubject = _IsRemoteSubject;
+
+  // Output
+  static WebSocketsAgentSubject_ = WebSocketsAgentSubject_;
+  static ResetAgentSubject_ = ResetAgentSubject_;
+  static IsWebSocketConnectionOpen_ = IsWebSocketConnectionOpen_;
+}

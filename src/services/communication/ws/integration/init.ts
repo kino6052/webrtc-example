@@ -1,6 +1,6 @@
-import { _IsWebSocketConnectionOpen } from "../../../init/init";
-import { IsWebSocketConnectionOpen_ } from "../ws";
+import { InitService } from "../../../init/init";
+import { WSService } from "../ws";
 
-IsWebSocketConnectionOpen_.subscribe((isOpen) =>
-  _IsWebSocketConnectionOpen.next(isOpen)
+WSService.IsWebSocketConnectionOpen_.subscribe((isOpen) =>
+  InitService._IsWebSocketConnectionOpen.next(isOpen)
 );

@@ -1,16 +1,10 @@
-import { filter, map, skip, take } from "rxjs/operators";
-import { IMessage } from "../../../../shared/definitions";
-import { ClientSubject_ } from "../../rtc/rtc";
-import { PositionMessageSubject_ } from "../outgoing";
+import { filter, map } from "rxjs/operators";
+import { RTCService } from "../../rtc/rtc";
+import { OutgoingMessageService } from "../outgoing";
 
-const messageToJson = (message: IMessage) => JSON.stringify(message);
-
-ClientSubject_.pipe(
-  skip(1),
-  filter((m) => !!m),
-  take(1)
-).subscribe((client) => {
-  PositionMessageSubject_.pipe(map(messageToJson)).subscribe((m) =>
-    client!.broadcastData(m)
-  );
-});
+OutgoingMessageService.PositionMessageSubject_.pipe(
+  filter(() => !!RTCService.ClientSubject_.getValue()),
+  map((message) => ({ message, client: RTCService.ClientSubject_.getValue()! }))
+).subscribe(({ message, client }) =>
+  client!.broadcastData(JSON.stringify(message))
+);

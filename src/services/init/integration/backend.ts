@@ -1,4 +1,4 @@
-import { _InitSubject } from "../../backend/backend";
-import { InitSubject_ } from "../init";
+import { BackendService } from "../../backend/backend";
+import { InitService } from "../init";
 
-InitSubject_.subscribe(() => _InitSubject.next());
+InitService.InitSubject_.subscribe(() => BackendService._InitSubject.next());

@@ -1,4 +1,4 @@
-import { _InitSubject } from "../../media/media";
-import { InitSubject_ } from "../init";
+import { MediaService } from "../../media/media";
+import { InitService } from "../init";
 
-InitSubject_.subscribe(() => _InitSubject.next());
+InitService.InitSubject_.subscribe(() => MediaService._InitSubject.next());

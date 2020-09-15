@@ -1,9 +1,9 @@
-import { ClientSubject_, _InitSubject } from "./rtc";
+import { RTCService } from "./rtc";
 
 describe("RTC Service", () => {
   it("should create client on init", () => {
-    _InitSubject.next();
-    const client = ClientSubject_.getValue();
+    RTCService._InitSubject.next();
+    const client = RTCService.ClientSubject_.getValue();
     expect(client).toBeTruthy();
   });
 });

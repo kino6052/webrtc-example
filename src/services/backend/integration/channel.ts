@@ -1,6 +1,6 @@
-import { StateService } from "../../state/state";
+import { ChannelService } from "../../channel/channel";
 import { BackendService } from "../backend";
 
 BackendService.TVProgramStateSubject_.subscribe((program) =>
-  StateService._TVProgramStateSubject.next(program)
+  ChannelService._TVProgramSubject.next(program)
 );

@@ -1,4 +1,4 @@
-import { _InitSubject } from "../../communication/rtc/rtc";
-import { InitSubject_ } from "../init";
+import { RTCService } from "../../communication/rtc/rtc";
+import { InitService } from "../init";
 
-InitSubject_.subscribe(() => _InitSubject.next());
+InitService.InitSubject_.subscribe(() => RTCService._InitSubject.next());

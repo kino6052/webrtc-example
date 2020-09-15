@@ -1,7 +1,7 @@
-import "../state";
 import { BackendService } from "../../backend";
 import { StateService } from "../../../state/state";
 import { ChannelService } from "../../../channel/channel";
+import "../../index";
 
 describe("Backend Service", () => {
   it("BackendService.TVProgramStateSubject_ -> StateService._TVProgramStateSubject", () => {

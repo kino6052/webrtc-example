@@ -1,8 +1,9 @@
-import { _UseTVChannelSubject } from "../../../backend/backend";
-import { PresentMessageSubject_, _IDSubject_ } from "../outgoing";
+import { filter } from "rxjs/internal/operators/filter";
+import { switchMap } from "rxjs/internal/operators/switchMap";
+import { BackendService } from "../../../backend/backend";
+import { OutgoingMessageService } from "../outgoing";
 
-PresentMessageSubject_.subscribe(() => {
-  const id = _IDSubject_.getValue();
-  if (!id) return;
-  _UseTVChannelSubject.next([id, 1]);
-});
+OutgoingMessageService.PositionMessageSubject_.pipe(
+  switchMap(() => OutgoingMessageService._IDSubject_),
+  filter((id) => !!id)
+).subscribe((id) => BackendService._UseTVChannelSubject.next([id!, 1]));

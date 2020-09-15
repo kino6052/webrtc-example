@@ -2,7 +2,7 @@ import { IncomingMessageService } from "../../../incoming/incoming";
 import { RTCService } from "../../rtc";
 import "../../../index";
 
-describe("RTC -> Incoming Messages", () => {
+describe("Incoming Message Service", () => {
   it("rtc.OnDataChannelMessagingSubject_ -> incoming._MessageSubject", () => {
     const spy = jest.fn();
     const input = ["1", "message"] as [string, string];
