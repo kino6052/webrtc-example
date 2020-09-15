@@ -3,17 +3,16 @@ import { filter } from "rxjs/operators";
 import { IMessage, TTVChannel } from "../../shared/definitions";
 
 // Input
-export const _CurrentTVChannelStateSubject = new BehaviorSubject<TTVChannel | null>(
-  1
-);
-export const _CanSendMessages = new BehaviorSubject<boolean>(true);
-export const _SendMessageToUnitySubject = new Subject<IMessage>();
-export const _MakeFullScreenSubject = new Subject();
+const _CurrentTVChannelStateSubject = new BehaviorSubject<TTVChannel | null>(1);
+const _CanSendMessages = new BehaviorSubject<boolean>(true);
+const _SendMessageToUnitySubject = new Subject<IMessage>();
+const _MakeFullScreenSubject = new Subject();
+const _QuitGameSubject = new Subject();
 
 // Output
-export const UnityMessageSubject_ = new Subject<string>();
-export const PositionStateSubject_ = new Subject<string>();
-export const DebugSubject_ = new Subject<{}>();
+const UnityMessageSubject_ = new Subject<string>();
+const PositionStateSubject_ = new Subject<string>();
+const DebugSubject_ = new Subject<{}>();
 
 // Auxilary
 const MANAGER = "Manager";
@@ -40,12 +39,35 @@ const makeFullScreen = () => {
   unityInstance.SetFullscreen(1);
 };
 
+const quitGame = () => {
+  // @ts-ignore
+  if (!unityInstance) return;
+  // @ts-ignore
+  unityInstance.Quit();
+};
+
 // Subscriptions
 // @ts-ignore
-window.sendUnityMessage = (message: string) => {
+window.sendUnityMessage = (message: string) =>
   UnityMessageSubject_.next(message);
-};
+
 _SendMessageToUnitySubject
   .pipe(filter(() => _CanSendMessages.getValue()))
   .subscribe(sendMessageToUnityHandler);
+
 _MakeFullScreenSubject.subscribe(makeFullScreen);
+
+_QuitGameSubject.subscribe(quitGame);
+
+export class UnityService {
+  static _CurrentTVChannelStateSubject = _CurrentTVChannelStateSubject;
+  static _CanSendMessages = _CanSendMessages;
+  static _SendMessageToUnitySubject = _SendMessageToUnitySubject;
+  static _MakeFullScreenSubject = _MakeFullScreenSubject;
+  static _QuitGameSubject = _QuitGameSubject;
+
+  // Output
+  static UnityMessageSubject_ = UnityMessageSubject_;
+  static PositionStateSubject_ = PositionStateSubject_;
+  static DebugSubject_ = DebugSubject_;
+}

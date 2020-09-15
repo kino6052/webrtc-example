@@ -2,24 +2,21 @@ import { BehaviorSubject, combineLatest, Subject } from "rxjs";
 import { filter } from "rxjs/operators";
 
 // Input
-export const _IsStreamEnabled = new BehaviorSubject<boolean>(false);
-export const _IsWebSocketConnectionOpen = new BehaviorSubject<boolean>(false);
-export const _EnvironmentSubject = new BehaviorSubject<"local" | "remote">(
-  "local"
-);
-export const _IsWindowLoadedSubject = new BehaviorSubject<boolean>(false);
-export const _IsGameLoadedSubject = new BehaviorSubject(false);
+const _IsWebSocketConnectionOpen = new BehaviorSubject<boolean>(false);
+const _EnvironmentSubject = new BehaviorSubject<"local" | "remote">("remote");
 
 // Output
-export const InitSubject_ = new Subject();
-export const DebugSubject_ = new Subject<string>();
-export const EnvSubject_ = new BehaviorSubject<"production" | "development">(
+const _IsWindowLoadedSubject = new BehaviorSubject<boolean>(false);
+const _IsGameLoadedSubject = new BehaviorSubject(false);
+const InitSubject_ = new Subject();
+const DebugSubject_ = new Subject<string>();
+const EnvSubject_ = new BehaviorSubject<"production" | "development">(
   "production"
 );
 
 // Methods
-export const getIsRemote = () => _EnvironmentSubject.getValue() === "remote";
-export const getIsLocal = () => _EnvironmentSubject.getValue() === "local";
+const getIsRemote = () => _EnvironmentSubject.getValue() === "remote";
+const getIsLocal = () => _EnvironmentSubject.getValue() === "local";
 
 const onLoadHandler = () => {
   let origin = window.location.origin;
@@ -56,3 +53,17 @@ combineLatest([
 InitSubject_.subscribe(() => {
   DebugSubject_.next("INIT!");
 });
+
+// Exports
+export class InitService {
+  // Input
+  static _IsWebSocketConnectionOpen = _IsWebSocketConnectionOpen;
+  static _EnvironmentSubject = _EnvironmentSubject;
+  static _IsWindowLoadedSubject = _IsWindowLoadedSubject;
+  static _IsGameLoadedSubject = _IsGameLoadedSubject;
+
+  // Output
+  static InitSubject_ = InitSubject_;
+  static DebugSubject_ = DebugSubject_;
+  static EnvSubject_ = EnvSubject_;
+}

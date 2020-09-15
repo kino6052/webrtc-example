@@ -1,8 +1,6 @@
-import { _RawMessageSubject } from "../../messaging/outgoing/outgoing";
-import { UnityMessageSubject_ } from "../unity";
-import { DebugSubject } from "../../../utils";
+import { OutgoingMessageService } from "../../communication/outgoing/outgoing";
+import { UnityService } from "../unity";
 
-UnityMessageSubject_.subscribe((message) => {
-  DebugSubject.next(message);
-  _RawMessageSubject.next(message);
+UnityService.UnityMessageSubject_.subscribe((message) => {
+  OutgoingMessageService._RawMessageSubject.next(message);
 });

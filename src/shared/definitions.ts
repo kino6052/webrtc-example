@@ -18,8 +18,8 @@ export interface IPositionMessage extends IMessage {
     y: number;
     z: number;
     yAngle: number;
-    isJumping: number;
-    isRunning: number;
+    isJumping: boolean;
+    isRunning: boolean;
   };
 }
 

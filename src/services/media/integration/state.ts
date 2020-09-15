@@ -1,6 +1,6 @@
-import { _IsPresentingSubject } from "../../state/state";
-import { IsPresentingSubject_ } from "../media";
+import { StateService } from "../../state/state";
+import { MediaService } from "../media";
 
-IsPresentingSubject_.subscribe((isPresenting) =>
-  _IsPresentingSubject.next(isPresenting)
+MediaService.IsPresentingSubject_.subscribe((isPresenting) =>
+  StateService._IsPresentingSubject.next(isPresenting)
 );

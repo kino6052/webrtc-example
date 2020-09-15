@@ -4,24 +4,21 @@ import { UPDATE_INTERVAL } from "../../const";
 import { EMessageType, IImageDataMessage } from "../../shared/definitions";
 
 // Input
-export const _InitSubject = new Subject();
-export const _ShareScreenSubject = new Subject();
+const _InitSubject = new Subject();
+const _ShareScreenSubject = new Subject();
 
 // Output
-export const IsPresentingSubject_ = new BehaviorSubject<boolean>(false);
-export const RemoteMediaSubject_ = new BehaviorSubject<MediaStream | null>(
-  null
-);
-export const LocalMediaSubject_ = new BehaviorSubject<MediaStream | null>(null);
-export const ImageSubject_ = new Subject<string>();
-export const ImageDataMessageSubject_ = new Subject<IImageDataMessage>();
-export const DebugSubject_ = new Subject<{}>();
+const IsPresentingSubject_ = new BehaviorSubject<boolean>(false);
+const RemoteMediaSubject_ = new BehaviorSubject<MediaStream | null>(null);
+const LocalMediaSubject_ = new BehaviorSubject<MediaStream | null>(null);
+const ImageSubject_ = new Subject<string>();
+const ImageDataMessageSubject_ = new Subject<IImageDataMessage>();
+const DebugSubject_ = new Subject<{}>();
 
 // Auxilary
 const SIZE = 1024;
 const canvas = document.createElement("canvas");
 const video = document.createElement("video");
-const canvas2DContext = canvas.getContext("2d");
 
 // Methods
 export const getUserMedia = () => {
@@ -47,7 +44,7 @@ const initializeCanvas = () => {
 };
 
 const streamToImageHandler = (stream: MediaStream) => {
-  if (!canvas2DContext) return;
+  if (!canvas) return;
   video.pause();
   video.srcObject = stream;
   video.addEventListener("canplay", () => {
@@ -56,8 +53,8 @@ const streamToImageHandler = (stream: MediaStream) => {
 };
 
 const update = () => {
-  if (!canvas2DContext) return;
-  canvas2DContext.drawImage(video, 0, 0, SIZE, SIZE);
+  if (!canvas) return;
+  canvas.getContext("2d")?.drawImage(video, 0, 0, SIZE, SIZE);
   const data = canvas.toDataURL("image/jpeg");
   const s = data.replace("data:image/jpeg;base64,", "");
   if (!s) return;
@@ -99,3 +96,18 @@ const onInitHandler = () => {
 };
 
 _InitSubject.pipe(take(1)).subscribe(onInitHandler);
+
+// Export
+export class MediaService {
+  // Input
+  static _InitSubject = _InitSubject;
+  static _ShareScreenSubject = _ShareScreenSubject;
+
+  // Output
+  static IsPresentingSubject_ = IsPresentingSubject_;
+  static RemoteMediaSubject_ = RemoteMediaSubject_;
+  static LocalMediaSubject_ = LocalMediaSubject_;
+  static ImageSubject_ = ImageSubject_;
+  static ImageDataMessageSubject_ = ImageDataMessageSubject_;
+  static DebugSubject_ = DebugSubject_;
+}

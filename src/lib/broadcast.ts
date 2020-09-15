@@ -1,7 +1,6 @@
 import { Subject } from "rxjs";
 import { filter } from "rxjs/operators";
 import { DebugSubject, generateId } from "../utils";
-import { Client } from "./client";
 
 type TCommunicationType = "greeting" | "farewell" | "individual";
 

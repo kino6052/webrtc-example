@@ -8,16 +8,16 @@ import {
 } from "../../shared/definitions";
 
 // Input
-export const _InitSubject = new Subject();
-export const _ClientSubject = new Subject<Client>();
-export const _IDSubject = new Subject<string>();
-export const _CurrentTVChannelStateSubject = new Subject<TTVChannel>();
-export const _TVProgramStateSubject = new Subject<TTVProgram>();
-export const _IsPresentingSubject = new Subject<boolean>();
+const _InitSubject = new Subject();
+const _ClientSubject = new Subject<Client>();
+const _IDSubject_ = new Subject<string>();
+const _CurrentTVChannelStateSubject = new Subject<TTVChannel>();
+const _TVProgramStateSubject = new Subject<TTVProgram>();
+const _IsPresentingSubject = new Subject<boolean>();
 
 // Output
-export const GameStateSubject_ = new BehaviorSubject<IGameState>(DEFAULT_STATE);
-export const DebugSubject_ = new Subject<{}>();
+const GameStateSubject_ = new BehaviorSubject<IGameState>(DEFAULT_STATE);
+const DebugSubject_ = new Subject<{}>();
 
 const getState = () => ({ ...GameStateSubject_.getValue() } as IGameState);
 
@@ -47,10 +47,24 @@ const stateUpdateHandler = ([client, id, channel, program, isPresenting]: [
 _InitSubject.subscribe(() => {
   combineLatest([
     _ClientSubject,
-    _IDSubject,
+    _IDSubject_,
     _CurrentTVChannelStateSubject,
     _TVProgramStateSubject,
     _IsPresentingSubject,
   ]).subscribe(stateUpdateHandler);
   GameStateSubject_.subscribe((state) => DebugSubject_.next(state));
 });
+
+export class StateService {
+  // Input
+  static _InitSubject = _InitSubject;
+  static _ClientSubject = _ClientSubject;
+  static _IDSubject_ = _IDSubject_;
+  static _CurrentTVChannelStateSubject = _CurrentTVChannelStateSubject;
+  static _TVProgramStateSubject = _TVProgramStateSubject;
+  static _IsPresentingSubject = _IsPresentingSubject;
+
+  // Output
+  static GameStateSubject_ = GameStateSubject_;
+  static DebugSubject_ = DebugSubject_;
+}

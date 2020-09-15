@@ -1,9 +1,8 @@
 import { _UseTVChannelSubject } from "../../../backend/backend";
-import { IDSubject_ } from "../../rtc/rtc";
-import { PresentMessageSubject_ } from "../outgoing";
+import { PresentMessageSubject_, _IDSubject_ } from "../outgoing";
 
 PresentMessageSubject_.subscribe(() => {
-  const id = IDSubject_.getValue();
+  const id = _IDSubject_.getValue();
   if (!id) return;
   _UseTVChannelSubject.next([id, 1]);
 });

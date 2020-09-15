@@ -12,13 +12,13 @@ import {
  */
 
 // Input
-export const _MessageSubject = new Subject<[string, string]>();
+const _MessageSubject = new Subject<[string, string]>();
+const _ImageSubject = new Subject<string>();
 
 // Output
-export const ImageSubject_ = new Subject<string>();
-export const PositionMessageSubject_ = new Subject<IPositionMessage>();
-export const ImageDataMessageSubject_ = new Subject<IImageDataMessage>();
-export const DebugSubject_ = new Subject<{}>();
+const PositionMessageSubject_ = new Subject<IPositionMessage>();
+const ImageDataMessageSubject_ = new Subject<[string, IImageDataMessage]>();
+const DebugSubject_ = new Subject<{}>();
 
 // Methods
 const handleIncomingMessage = ([id, message]: [string, string]) => {
@@ -35,6 +35,9 @@ const handleIncomingMessage = ([id, message]: [string, string]) => {
 const positionMessageFilter = (m: ReturnType<typeof handleIncomingMessage>) =>
   !!m && m.type === EMessageType.Position;
 
+const imageMessageFilter = (m: ReturnType<typeof handleIncomingMessage>) =>
+  !!m && m.type === EMessageType.ImageData;
+
 const imageSubjectHandler = (image: string): IImageDataMessage => ({
   type: EMessageType.ImageData,
   image,
@@ -47,6 +50,22 @@ _MessageSubject
     PositionMessageSubject_.next((m as unknown) as IPositionMessage)
   );
 
-ImageSubject_.pipe(map(imageSubjectHandler)).subscribe((m) =>
-  ImageDataMessageSubject_.next(m)
-);
+_MessageSubject
+  .pipe(map(handleIncomingMessage), filter(imageMessageFilter))
+  .subscribe((m) => {
+    if (!m) return;
+
+    ImageDataMessageSubject_.next([m.id, (m as unknown) as IImageDataMessage]);
+  });
+
+// Export
+export class IncomingMessageService {
+  // Input
+  static _MessageSubject = _MessageSubject;
+  static _ImageSubject = _ImageSubject;
+
+  // Output
+  static PositionMessageSubject_ = PositionMessageSubject_;
+  static ImageDataMessageSubject_ = ImageDataMessageSubject_;
+  static DebugSubject_ = DebugSubject_;
+}

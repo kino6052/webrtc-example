@@ -1,6 +1,6 @@
-import { _BroadcastSubject } from "../../messaging/rtc/rtc";
-import { ImageDataMessageSubject_ } from "../media";
+import { RTCService } from "../../communication/rtc/rtc";
+import { MediaService } from "../media";
 
-ImageDataMessageSubject_.subscribe((m) =>
-  _BroadcastSubject.next(JSON.stringify(m))
+MediaService.ImageDataMessageSubject_.subscribe((m) =>
+  RTCService._BroadcastSubject.next(JSON.stringify(m))
 );

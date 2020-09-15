@@ -8,15 +8,15 @@ import {
 } from "../../shared/definitions";
 
 // Incoming
-export const _InitSubject = new Subject();
-export const _RefreshSubject = new Subject();
-export const _UseTVChannelSubject = new Subject<[string, TTVChannel]>();
-export const _SetNameSubject = new Subject<[string, string]>();
+const _InitSubject = new Subject();
+const _RefreshSubject = new Subject();
+const _UseTVChannelSubject = new Subject<[string, TTVChannel]>();
+const _SetNameSubject = new Subject<[string, string]>();
 
 // Outgoing
-export const TVProgramStateSubject_ = new BehaviorSubject<TTVProgram>({});
-export const NamesStateSubject_ = new BehaviorSubject<TNames>({});
-export const DebugSubject_ = new Subject<string>();
+const TVProgramStateSubject_ = new BehaviorSubject<TTVProgram>({});
+const NamesStateSubject_ = new BehaviorSubject<TNames>({});
+const DebugSubject_ = new Subject<string>();
 
 // Methods
 const post = <T>(url: string, data: T) =>
@@ -70,3 +70,17 @@ _InitSubject.subscribe(() => {
     getNames();
   });
 });
+
+// Exports
+export class BackendService {
+  // Incoming
+  static _InitSubject = _InitSubject;
+  static _RefreshSubject = _RefreshSubject;
+  static _UseTVChannelSubject = _UseTVChannelSubject;
+  static _SetNameSubject = _SetNameSubject;
+
+  // Output
+  static TVProgramStateSubject_ = TVProgramStateSubject_;
+  static NamesStateSubject_ = NamesStateSubject_;
+  static DebugSubject_ = DebugSubject_;
+}

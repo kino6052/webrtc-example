@@ -1,4 +1,4 @@
-import { _InitSubject } from "../../state/state";
-import { InitSubject_ } from "../init";
+import { StateService } from "../../state/state";
+import { InitService } from "../init";
 
-InitSubject_.subscribe(() => _InitSubject.next());
+InitService.InitSubject_.subscribe(() => StateService._InitSubject.next());
