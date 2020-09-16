@@ -23,6 +23,7 @@ const PresentMessageSubject_ = new Subject<IMessage>();
 const FullScreenMessageSubject_ = new Subject<IMessage>();
 const PositionMessageSubject_ = new Subject<IPositionMessage>();
 const ImageMessageSubject_ = new Subject<IImageDataMessage>();
+const ProceedMessageSubject_ = new Subject<IMessage>();
 const DebugSubject_ = new Subject();
 
 // Methods
@@ -56,6 +57,9 @@ MessageSubject_.pipe(
   filter(generateFilter(EMessageType.FullScreen))
 ).subscribe((m) => FullScreenMessageSubject_.next(m));
 MessageSubject_.pipe(
+  filter(generateFilter(EMessageType.Proceed))
+).subscribe((m) => ProceedMessageSubject_.next(m));
+MessageSubject_.pipe(
   filter(generateFilter(EMessageType.Position))
 ).subscribe((m) => PositionMessageSubject_.next(m as IPositionMessage));
 
@@ -81,5 +85,6 @@ export class OutgoingMessageService {
   static FullScreenMessageSubject_ = FullScreenMessageSubject_;
   static PositionMessageSubject_ = PositionMessageSubject_;
   static ImageMessageSubject_ = ImageMessageSubject_;
+  static ProceedMessageSubject_ = ProceedMessageSubject_;
   static DebugSubject_ = DebugSubject_;
 }

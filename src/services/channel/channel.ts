@@ -16,11 +16,16 @@ import {
  * have the id associated with the current channel.
  */
 
+const ImageDataMessageSubject = new BehaviorSubject<IImageDataMessage | null>(
+  null
+);
+
 // Input
 const _InitSubject = new Subject();
 const _TVProgramSubject = new BehaviorSubject<TTVProgram>({});
 const _CurrentChannelSubject = new BehaviorSubject<TTVChannel>(1);
 const _ImageDataMessageSubject = new Subject<[string, IImageDataMessage]>();
+const _ProceedSubject = new Subject();
 
 // Output
 const ImageDataMessageSubject_ = new Subject<IImageDataMessage>();
@@ -47,6 +52,8 @@ const filterCurrentChannelImageDataMessages = ([program, channel, tuple]: [
   ImageDataMessageSubject_.next(message);
 };
 
+const hasMessageFilter = () => !!ImageDataMessageSubject.getValue();
+
 // Subscriptions
 _InitSubject.subscribe(init);
 
@@ -62,6 +69,12 @@ DebugSubject_.pipe(filter(isDebug)).subscribe((m) =>
   console.warn("Channel Service: ", m)
 );
 
+_ProceedSubject
+  .pipe(filter(hasMessageFilter))
+  .subscribe(() =>
+    ImageDataMessageSubject_.next(ImageDataMessageSubject.getValue()!)
+  );
+
 // External
 export class ChannelService {
   // Input
@@ -69,6 +82,7 @@ export class ChannelService {
   static _TVProgramSubject = _TVProgramSubject;
   static _CurrentChannelSubject = _CurrentChannelSubject;
   static _ImageDataMessageSubject = _ImageDataMessageSubject;
+  static _ProceedSubject = _ProceedSubject;
 
   // Output
   static ImageDataMessageSubject_ = ImageDataMessageSubject_;

@@ -1,4 +1,5 @@
 import { BackendService } from "../../../backend/backend";
+import { ChannelService } from "../../../channel/channel";
 import { InitService } from "../../../init/init";
 import { MediaService } from "../../../media/media";
 import { UnityService } from "../../../unity/unity";
@@ -23,4 +24,8 @@ OutgoingMessageService.PositionMessageSubject_.subscribe((message) =>
 
 OutgoingMessageService.FullScreenMessageSubject_.subscribe(() =>
   UnityService._MakeFullScreenSubject.next()
+);
+
+OutgoingMessageService.ProceedMessageSubject_.subscribe(() =>
+  ChannelService._ProceedSubject.next()
 );

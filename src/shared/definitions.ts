@@ -5,6 +5,7 @@ export enum EMessageType {
   Position = "position",
   ImageData = "image",
   Start = "start",
+  Proceed = "proceed",
 }
 
 export interface IMessage {

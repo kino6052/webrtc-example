@@ -4,6 +4,7 @@ import {
   IPositionMessage,
 } from "../../../../../shared/definitions";
 import { BackendService } from "../../../../backend/backend";
+import { ChannelService } from "../../../../channel/channel";
 import { InitService } from "../../../../init/init";
 import { MediaService } from "../../../../media/media";
 import { UnityService } from "../../../../unity/unity";
@@ -64,5 +65,12 @@ describe("Outgoing Message Service", () => {
     OutgoingMessageService.PositionMessageSubject_.next(input);
     expect(spy).toHaveBeenCalledTimes(1);
     expect(spy).toHaveBeenCalledWith(JSON.stringify(input));
+  });
+
+  it("OutgoingMessageService.ProceedMessageSubject_ -> ChannelService._ProceedSubject", () => {
+    const spy = jest.fn();
+    ChannelService._ProceedSubject.subscribe(spy);
+    OutgoingMessageService.ProceedMessageSubject_.next();
+    expect(spy).toHaveBeenCalledTimes(1);
   });
 });

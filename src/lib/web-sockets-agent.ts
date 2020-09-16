@@ -25,6 +25,7 @@ export class WebSocketsAgent {
     this.ws.onmessage = this.onMessageHandler;
     this.ws.onopen = this.onOpenHandler;
     this.ws.onclose = this.onCloseHandler;
+    this.ws.onerror = this.onErrorHandler;
     this.IsWebSocketReadySubject.pipe(filter((isReady) => isReady)).subscribe(
       this.onIsWebSocketReadyHandler
     );
@@ -58,6 +59,11 @@ export class WebSocketsAgent {
     const message = JSON.parse(event.data) as IMessage<unknown>;
     this.canSend = false;
     this.CommunicationSubject_.next(message);
+  };
+
+  onErrorHandler = (event: Event) => {
+    console.error("WS Error: ", event);
+    if (!this.ws.OPEN) this.OnCloseSubject.next();
   };
 
   onOpenHandler = () => {

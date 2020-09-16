@@ -23,6 +23,7 @@ const DebugSubject_ = new Subject();
 
 // Methods
 const init = () => {
+  // TODO: Add Handler to Refresh WS in WebSocketAgent
   const ws = new WebSocketsAgent(_CommunicationSubject, CommunicationSubject_);
   WebSocketsAgentSubject_.next(ws);
 };

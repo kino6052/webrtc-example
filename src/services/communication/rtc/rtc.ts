@@ -24,8 +24,6 @@ const DebugSubject_ = new Subject();
 // Methods
 const init = () => {
   const client = Client.createClient(CommunicationSubject_);
-  // @ts-ignore
-  window.client = client;
   ClientSubject_.next(client);
   _IsInitializedSubject.next(true);
   // DebugSubject_.next("Remote");

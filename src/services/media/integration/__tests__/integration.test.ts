@@ -48,7 +48,7 @@ describe("Media Service", () => {
     UnityService._CanSendMessages.subscribe(spy);
     MediaService.IsPresentingSubject_.next(false);
     MediaService.IsPresentingSubject_.next(true);
-    expect(spy).toHaveBeenCalledTimes(1);
+    expect(spy).toHaveBeenCalledTimes(2);
     expect(spy).toHaveBeenCalledWith(false);
   });
 });

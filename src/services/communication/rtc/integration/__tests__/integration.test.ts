@@ -37,7 +37,7 @@ describe("Incoming Message Service", () => {
     const input = "1";
     BackendService._IDSbuject.subscribe(spy);
     RTCService.IDSubject_.next(input);
-    expect(spy).toHaveBeenCalledTimes(1);
+    expect(spy).toHaveBeenCalledTimes(2);
   });
 
   it("RTCService.IDSubject_ -> OutgoingMessageService._IDSubject", () => {
@@ -45,7 +45,7 @@ describe("Incoming Message Service", () => {
     const input = "1";
     OutgoingMessageService._IDSubject_.subscribe(spy);
     RTCService.IDSubject_.next(input);
-    expect(spy).toHaveBeenCalledTimes(1);
+    expect(spy).toHaveBeenCalledTimes(2);
   });
 
   it("RTCService.IDSubject_ -> StateService._IDSubject", () => {

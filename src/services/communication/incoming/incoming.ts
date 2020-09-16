@@ -55,7 +55,6 @@ _MessageSubject
   .pipe(map(handleIncomingMessage), filter(imageMessageFilter))
   .subscribe((m) => {
     if (!m) return;
-
     ImageDataMessageSubject_.next([m.id, (m as unknown) as IImageDataMessage]);
   });
 
