@@ -30,6 +30,7 @@ const generateFilter = (type: EMessageType) => (message: IMessage) =>
 
 const rawMessageHandler = (message: string) => {
   let parsedMessage: IMessage | null = null;
+  DebugSubject_.next(message);
   try {
     parsedMessage = JSON.parse(message);
   } catch (e) {
@@ -56,6 +57,10 @@ MessageSubject_.pipe(
 MessageSubject_.pipe(
   filter(generateFilter(EMessageType.Position))
 ).subscribe((m) => PositionMessageSubject_.next(m as IPositionMessage));
+
+// Debugging
+DebugSubject_.subscribe((m) => console.warn("Outgoing Message Service: ", m));
+PresentMessageSubject_.subscribe((m) => DebugSubject_.next(m));
 
 // Exports
 export class OutgoingMessageService {

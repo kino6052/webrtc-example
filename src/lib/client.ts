@@ -9,6 +9,7 @@ import { ConnectionManager } from "./connection-manager";
 import { RTCMessagingAgent } from "./rtc-messaging-agent";
 
 export class Client {
+  static createClient = () => new Client();
   public id = generateId(4, 4);
 
   // Channels

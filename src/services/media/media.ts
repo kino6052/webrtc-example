@@ -5,6 +5,8 @@ import { Subject } from "rxjs/internal/Subject";
 import { UPDATE_INTERVAL } from "../../const";
 import { EMessageType, IImageDataMessage } from "../../shared/definitions";
 
+const IsInitializedSubject = new BehaviorSubject(false);
+
 // Input
 const _InitSubject = new Subject();
 const _ShareScreenSubject = new Subject();
@@ -23,7 +25,7 @@ const canvas = document.createElement("canvas");
 const video = document.createElement("video");
 
 // Methods
-export const getUserMedia = () => {
+export const getUserMedia = () =>
   navigator.mediaDevices
     //@ts-ignore
     .getDisplayMedia({
@@ -33,12 +35,12 @@ export const getUserMedia = () => {
     //@ts-ignore
     .then((stream) => {
       LocalMediaSubject_.next(stream);
+      DebugSubject_.next("Local Media");
     })
     //@ts-ignore
     .catch(function (e) {
       DebugSubject_.next("getUserMedia() error: " + e.name);
     });
-};
 
 const initializeCanvas = () => {
   canvas.width = SIZE;
@@ -82,22 +84,35 @@ const onShareScreenHandler = () => {
   getUserMedia();
 };
 
-// Subscriptions
-const onInitHandler = () => {
+const init = () => {
   initializeCanvas();
-  LocalMediaSubject_.subscribe(onStreamToImageHandler);
-  interval(UPDATE_INTERVAL)
-    .pipe(filter(() => !!IsPresentingSubject_.getValue()))
-    .subscribe(update);
-  // When User Clicks on Share Screen
-  // Currently Can't Turn Sharing Off, Have to Reload
-  _ShareScreenSubject
-    .pipe(filter(() => !LocalMediaSubject_.getValue()))
-    .subscribe(onShareScreenHandler);
-  ImageSubject_.subscribe(onImageToImageDataMessageHandler);
+  IsInitializedSubject.next(true);
 };
 
-_InitSubject.subscribe(onInitHandler);
+const isInitializedFilter = () => IsInitializedSubject.getValue();
+const hasNoLocalMediaFilter = () => !LocalMediaSubject_.getValue();
+
+// Subscriptions1
+
+_InitSubject.subscribe(init);
+
+ImageSubject_.pipe(filter(isInitializedFilter)).subscribe(
+  onImageToImageDataMessageHandler
+);
+
+LocalMediaSubject_.pipe(filter(isInitializedFilter)).subscribe(
+  onStreamToImageHandler
+);
+
+_ShareScreenSubject
+  .pipe(filter(isInitializedFilter), filter(hasNoLocalMediaFilter))
+  .subscribe(onShareScreenHandler);
+
+DebugSubject_.subscribe((m) => console.warn("Media Service: ", m));
+
+interval(UPDATE_INTERVAL)
+  .pipe(filter(() => IsPresentingSubject_.getValue()))
+  .subscribe(update);
 
 // Export
 export class MediaService {

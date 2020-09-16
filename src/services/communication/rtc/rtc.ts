@@ -1,5 +1,7 @@
 import { BehaviorSubject } from "rxjs/internal/BehaviorSubject";
 import { debounceTime } from "rxjs/internal/operators/debounceTime";
+import { filter } from "rxjs/internal/operators/filter";
+import { switchMap } from "rxjs/internal/operators/switchMap";
 import { Subject } from "rxjs/internal/Subject";
 import { CommunicationSubject } from "../../../lib/broadcast";
 import { Client } from "../../../lib/client";
@@ -16,37 +18,40 @@ const DebugSubject_ = new Subject();
 
 // Methods
 const init = () => {
+  const client = Client.createClient();
+  ClientSubject_.next(client);
   _IsInitializedSubject.next(true);
   DebugSubject_.next("Remote");
-  const client = new Client();
   IDSubject_.next(client.id);
-  ClientSubject_.next(client);
 };
 
-// Subscriptions
-const onClientHandler = (client: Client) => {
-  client!.OnDataChannelMessageSubject_.subscribe((m) =>
-    OnDataChannelMessageSubject_.next(m)
-  );
-};
+const isInitializedFilter = () => _IsInitializedSubject.getValue();
 
-_InitSubject.subscribe(init);
+const onDataChannelHandler = (m: [string, string]) =>
+  OnDataChannelMessageSubject_.next(m);
 
-ClientSubject_.subscribe((client) => {
-  const isInitialized = _IsInitializedSubject.getValue();
-  if (!client || !isInitialized) return;
-  onClientHandler(client!);
-});
-
-_BroadcastSubject.subscribe((message) => {
+const onBroadcastHandler = (message: string) => {
   const client = ClientSubject_.getValue();
   if (!client) return;
   client.broadcastData(message);
-});
+};
+
+// Subscriptions
+_InitSubject.subscribe(init);
+
+ClientSubject_.pipe(
+  filter(isInitializedFilter),
+  filter((c) => !!c),
+  switchMap((client) => client!.OnDataChannelMessageSubject_)
+).subscribe(onDataChannelHandler);
+
+_BroadcastSubject.subscribe(onBroadcastHandler);
 
 CommunicationSubject.pipe(debounceTime(100)).subscribe(() =>
   UpdateStateSubject_.next()
 );
+
+DebugSubject_.subscribe((m) => console.warn("RTC Service: ", m));
 
 // Exports
 export class RTCService {

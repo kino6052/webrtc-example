@@ -1,9 +1,4 @@
-import "./incoming/integration/channel";
-import "./incoming/integration/unity";
-import "./outgoing/integration/backend";
-import "./outgoing/integration/init";
-import "./outgoing/integration/media";
-import "./outgoing/integration/rtc";
-import "./outgoing/integration/unity";
-import "./rtc/integration/incoming";
-import "./ws/integration/init";
+import "./incoming/integration/integration";
+import "./outgoing/integration/integration";
+import "./rtc/integration/integration";
+import "./ws/integration/integration";
