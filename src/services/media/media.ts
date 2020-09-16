@@ -1,5 +1,7 @@
-import { BehaviorSubject, interval, Subject } from "rxjs";
-import { filter, take } from "rxjs/operators";
+import { BehaviorSubject } from "rxjs/internal/BehaviorSubject";
+import { interval } from "rxjs/internal/observable/interval";
+import { filter } from "rxjs/internal/operators/filter";
+import { Subject } from "rxjs/internal/Subject";
 import { UPDATE_INTERVAL } from "../../const";
 import { EMessageType, IImageDataMessage } from "../../shared/definitions";
 
@@ -95,7 +97,7 @@ const onInitHandler = () => {
   ImageSubject_.subscribe(onImageToImageDataMessageHandler);
 };
 
-_InitSubject.pipe(take(1)).subscribe(onInitHandler);
+_InitSubject.subscribe(onInitHandler);
 
 // Export
 export class MediaService {

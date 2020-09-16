@@ -1,5 +1,6 @@
-import { BehaviorSubject, Subject } from "rxjs";
-import { filter } from "rxjs/operators";
+import { BehaviorSubject } from "rxjs/internal/BehaviorSubject";
+import { filter } from "rxjs/internal/operators/filter";
+import { Subject } from "rxjs/internal/Subject";
 import { DebugSubject_, IMessage } from "./broadcast";
 
 export class WebSocketsAgent {

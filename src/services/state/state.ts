@@ -1,4 +1,6 @@
-import { BehaviorSubject, combineLatest, Subject } from "rxjs";
+import { BehaviorSubject } from "rxjs/internal/BehaviorSubject";
+import { combineLatest } from "rxjs/internal/observable/combineLatest";
+import { Subject } from "rxjs/internal/Subject";
 import { Client } from "../../lib/client";
 import {
   DEFAULT_STATE,

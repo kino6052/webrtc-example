@@ -1,5 +1,6 @@
-import { BehaviorSubject, Subject } from "rxjs";
-import { debounceTime } from "rxjs/operators";
+import { BehaviorSubject } from "rxjs/internal/BehaviorSubject";
+import { debounceTime } from "rxjs/internal/operators/debounceTime";
+import { Subject } from "rxjs/internal/Subject";
 import { CommunicationSubject } from "../../../lib/broadcast";
 import { Client } from "../../../lib/client";
 

@@ -1,4 +1,4 @@
-import { Subject } from "rxjs";
+import { Subject } from "rxjs/internal/Subject";
 import { DebugSubject_ } from "./broadcast";
 import { RTCMessagingAgent } from "./rtc-messaging-agent";
 

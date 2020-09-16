@@ -1,4 +1,4 @@
-import { Subject } from "rxjs";
+import { Subject } from "rxjs/internal/Subject";
 import { generateId } from "../utils";
 import {
   BroadcastingAgent,

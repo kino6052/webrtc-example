@@ -1,5 +1,6 @@
-import { Subject } from "rxjs";
-import { filter, map } from "rxjs/operators";
+import { filter } from "rxjs/internal/operators/filter";
+import { map } from "rxjs/internal/operators/map";
+import { Subject } from "rxjs/internal/Subject";
 import {
   EMessageType,
   IImageDataMessage,

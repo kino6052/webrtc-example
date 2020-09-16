@@ -1,5 +1,7 @@
-import { BehaviorSubject, combineLatest, Subject } from "rxjs";
-import { filter } from "rxjs/operators";
+import { BehaviorSubject } from "rxjs/internal/BehaviorSubject";
+import { combineLatest } from "rxjs/internal/observable/combineLatest";
+import { filter } from "rxjs/internal/operators/filter";
+import { Subject } from "rxjs/internal/Subject";
 
 // Input
 const _IsWebSocketConnectionOpen = new BehaviorSubject<boolean>(false);

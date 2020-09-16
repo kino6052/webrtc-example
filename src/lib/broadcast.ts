@@ -1,5 +1,5 @@
-import { Subject } from "rxjs";
-import { filter } from "rxjs/operators";
+import { filter } from "rxjs/internal/operators/filter";
+import { Subject } from "rxjs/internal/Subject";
 import { generateId } from "../utils";
 
 type TCommunicationType = "greeting" | "farewell" | "individual";

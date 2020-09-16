@@ -1,5 +1,4 @@
-import { Subject } from "rxjs";
-import { filter } from "rxjs/operators";
+import { Subject } from "rxjs/internal/Subject";
 import { BroadcastingAgent, DebugSubject_, IMessage } from "./broadcast";
 
 export class RTCMessagingAgent {
