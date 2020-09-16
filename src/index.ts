@@ -1,20 +1,7 @@
-// init
-import "./services/init";
-
-// backend
 import "./services/backend";
-
-// media
-import "./services/media";
-
-// messaging
-import "./services/communication";
-
-// state
-import "./services/state";
-
-// channel
 import "./services/channel";
-
-// unity
+import "./services/communication";
+import "./services/init";
+import "./services/media";
+import "./services/state";
 import "./services/unity";
