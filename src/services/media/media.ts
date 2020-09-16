@@ -65,8 +65,9 @@ const update = () => {
   ImageSubject_.next(s);
 };
 
-const onStreamToImageHandler = (stream: MediaStream | null) => {
+const onLocalMediaHandler = (stream: MediaStream | null) => {
   if (!stream) return;
+  IsPresentingSubject_.next(true);
   streamToImageHandler(stream);
 };
 
@@ -79,7 +80,6 @@ const onImageToImageDataMessageHandler = (image: string) => {
 };
 
 const onShareScreenHandler = () => {
-  IsPresentingSubject_.next(true);
   DebugSubject_.next("Init Media");
   getUserMedia();
 };
@@ -101,7 +101,7 @@ ImageSubject_.pipe(filter(isInitializedFilter)).subscribe(
 );
 
 LocalMediaSubject_.pipe(filter(isInitializedFilter)).subscribe(
-  onStreamToImageHandler
+  onLocalMediaHandler
 );
 
 _ShareScreenSubject

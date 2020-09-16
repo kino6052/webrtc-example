@@ -42,4 +42,13 @@ describe("Media Service", () => {
     expect(spy).toHaveBeenCalledTimes(1);
     expect(spy).toHaveBeenCalledWith(undefined);
   });
+
+  it("MediaService.IsPresentingSubject_ -> UnityService._QuitGameSubject", () => {
+    const spy = jest.fn();
+    UnityService._CanSendMessages.subscribe(spy);
+    MediaService.IsPresentingSubject_.next(false);
+    MediaService.IsPresentingSubject_.next(true);
+    expect(spy).toHaveBeenCalledTimes(1);
+    expect(spy).toHaveBeenCalledWith(false);
+  });
 });
