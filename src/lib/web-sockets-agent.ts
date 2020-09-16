@@ -79,6 +79,7 @@ export class WebSocketsAgent {
 
   sendMessage = (message: string) => {
     this.DebugSubject_.next(message);
+    if (!this.ws.OPEN) return;
     this.ws.send(message);
   };
 }

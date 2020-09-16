@@ -1,3 +1,4 @@
+import { BehaviorSubject } from "rxjs/internal/BehaviorSubject";
 import { filter } from "rxjs/internal/operators/filter";
 import { Subject } from "rxjs/internal/Subject";
 import { isDebug } from "../const";
@@ -17,7 +18,7 @@ export class Client {
 
   // Subjects
   // Input
-  public _LocalStreamSubject = new Subject<MediaStream>();
+  public _LocalMediaSubject = new BehaviorSubject<MediaStream | null>(null);
 
   // Output
   public OnDataChannelMessageSubject_ = new Subject<[string, string]>();
@@ -42,7 +43,6 @@ export class Client {
     this.ConnectionManager.OnConnectionCreatedSubject.subscribe(
       this.onConnectionCreatedHandler
     );
-    this._LocalStreamSubject.subscribe();
     this.BroadcastingAgent.sendGreeting();
     this.DebugSubject_.next(["Client", this]);
     this.DebugSubject_.pipe(filter(isDebug)).subscribe((m) =>
@@ -56,12 +56,12 @@ export class Client {
     const [id, connection] = message;
     connection.ondatachannel = this.onDataChannelHandler(id);
     connection.ontrack = this.onTrackHandler(id);
-    const dataChannel = connection.createDataChannel(`data-channel-${id}`);
-    dataChannel.onopen = (ev) => this.DebugSubject_.next("Opened Channel");
-    dataChannel.onerror = (ev) => this.DebugSubject_.next(JSON.stringify(ev));
-    this.dataChannels[id] = dataChannel;
-    dataChannel.onmessage = this.onDataChannelMessageHandler(id);
-    this.DebugSubject_.next(this);
+
+    this.addDataChannelToConnection(id, connection);
+
+    const stream = this._LocalMediaSubject.getValue();
+    if (!stream) return;
+    this.addStreamToConnection(stream, connection);
   };
 
   onConnected = (id: string, connection: RTCPeerConnection) => {
@@ -78,13 +78,13 @@ export class Client {
   onLocalStreamHandler = (stream: MediaStream) => {
     const connections = this.ConnectionManager.connections;
     for (let id in connections) {
-      this.addStreamToConnection(connections[id], stream);
+      this.addStreamToConnection(stream, connections[id]);
     }
   };
 
   addStreamToConnection = (
-    connection: RTCPeerConnection,
-    stream: MediaStream
+    stream: MediaStream,
+    connection: RTCPeerConnection
   ) => {
     stream.getTracks().forEach((t) => connection.addTrack(t, stream));
   };
@@ -102,6 +102,14 @@ export class Client {
   };
 
   // Data Channel
+  addDataChannelToConnection = (id: string, connection: RTCPeerConnection) => {
+    // Data Channel
+    const dataChannel = connection.createDataChannel(`data-channel-${id}`);
+    dataChannel.onopen = (ev) => this.DebugSubject_.next("Opened Channel");
+    dataChannel.onerror = (ev) => this.DebugSubject_.next(JSON.stringify(ev));
+    this.dataChannels[id] = dataChannel;
+    dataChannel.onmessage = this.onDataChannelMessageHandler(id);
+  };
 
   sendDataToChannel = (id: string, message: string) => {
     const channel = this.dataChannels[id];

@@ -12,6 +12,7 @@ const _InitSubject = new Subject();
 const _IsInitializedSubject = new BehaviorSubject<boolean>(false);
 const _BroadcastSubject = new Subject<string>();
 const _CommunicationSubject = new Subject<IMessage<unknown>>();
+const _MediaSubject = new BehaviorSubject<MediaStream | null>(null);
 
 // Output
 const CommunicationSubject_ = new Subject<IMessage<unknown>>();
@@ -44,6 +45,12 @@ const onBroadcastHandler = (message: string) => {
   client.broadcastData(message);
 };
 
+const onMediaHandler = (media: MediaStream | null) => {
+  const client = ClientSubject_.getValue();
+  if (!client) return;
+  client._LocalMediaSubject.next(media);
+};
+
 // Subscriptions
 _InitSubject.subscribe(init);
 
@@ -70,6 +77,8 @@ ClientSubject_.pipe(
   switchMap((client) => client!.DebugSubject_)
 ).subscribe((m) => DebugSubject_.next(m));
 
+_MediaSubject.subscribe(onMediaHandler);
+
 DebugSubject_.pipe(filter(isDebug)).subscribe((m) =>
   console.warn("RTC Service: ", m)
 );
@@ -80,6 +89,7 @@ export class RTCService {
   static _IsInitializedSubject = _IsInitializedSubject;
   static _BroadcastSubject = _BroadcastSubject;
   static _CommunicationSubject = _CommunicationSubject;
+  static _MediaSubject = _MediaSubject;
 
   // Output
   static CommunicationSubject_ = CommunicationSubject_;

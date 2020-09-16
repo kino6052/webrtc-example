@@ -6,6 +6,7 @@ import { isDebug } from "../../const";
 
 // Input
 const _IsWebSocketConnectionOpen = new BehaviorSubject<boolean>(false);
+const _IsMediaConfiguredSubject = new BehaviorSubject(false);
 const _EnvironmentSubject = new BehaviorSubject<"local" | "remote">("remote");
 
 // Output
@@ -40,18 +41,26 @@ combineLatest([
   _IsWindowLoadedSubject,
   _IsGameLoadedSubject,
   _IsWebSocketConnectionOpen,
+  _IsMediaConfiguredSubject,
 ])
   .pipe(
     filter(
-      ([isWindowLoadedSubject, isGameLoaded, IsWebSocketConnectionOpen]) => {
+      ([
+        isWindowLoadedSubject,
+        isGameLoaded,
+        isWebSocketConnectionOpen,
+        isMediaConfigured,
+      ]) => {
         DebugSubject_.next([
           isWindowLoadedSubject,
           isGameLoaded,
-          IsWebSocketConnectionOpen,
+          isWebSocketConnectionOpen,
+          isMediaConfigured,
         ]);
         const isRemote = getIsRemote();
-        if (!isWindowLoadedSubject || !isGameLoaded) return false;
-        if (isRemote && !IsWebSocketConnectionOpen) return false;
+        if (!isWindowLoadedSubject || !isGameLoaded || !isMediaConfigured)
+          return false;
+        if (isRemote && !isWebSocketConnectionOpen) return false;
         return true;
       }
     )
@@ -73,6 +82,7 @@ export class InitService {
   static _EnvironmentSubject = _EnvironmentSubject;
   static _IsWindowLoadedSubject = _IsWindowLoadedSubject;
   static _IsGameLoadedSubject = _IsGameLoadedSubject;
+  static _IsMediaConfiguredSubject = _IsMediaConfiguredSubject;
 
   // Output
   static InitSubject_ = InitSubject_;

@@ -1,6 +1,7 @@
 import { BehaviorSubject } from "rxjs/internal/BehaviorSubject";
 import { interval } from "rxjs/internal/observable/interval";
 import { filter } from "rxjs/internal/operators/filter";
+import { throttleTime } from "rxjs/internal/operators/throttleTime";
 import { Subject } from "rxjs/internal/Subject";
 import { isDebug, UPDATE_INTERVAL } from "../../const";
 import { EMessageType, IImageDataMessage } from "../../shared/definitions";
@@ -12,39 +13,53 @@ const _InitSubject = new Subject();
 const _ShareScreenSubject = new Subject();
 
 // Output
+const OnRequestAnimationFrame_ = new Subject();
 const IsPresentingSubject_ = new BehaviorSubject<boolean>(false);
-const RemoteMediaSubject_ = new BehaviorSubject<MediaStream | null>(null);
-const LocalMediaSubject_ = new BehaviorSubject<MediaStream | null>(null);
+const MediaSubject_ = new BehaviorSubject<MediaStream | null>(null);
+const IsMediaConfiguredSubject_ = new BehaviorSubject(false);
+const ScreenMediaSubject_ = new BehaviorSubject<MediaStream | null>(null);
 const ImageSubject_ = new Subject<string>();
 const ImageDataMessageSubject_ = new Subject<IImageDataMessage>();
 const DebugSubject_ = new Subject<{}>();
 
 // Auxilary
 const SIZE = 1024;
-const canvas = document.createElement("canvas");
 const video = document.createElement("video");
+let canvas: OffscreenCanvas;
 
 // Methods
-export const getUserMedia = () =>
+const getAudio = () =>
+  navigator.mediaDevices
+    .getUserMedia({ audio: true, video: false })
+    .then((stream) => {
+      MediaSubject_.next(stream);
+    })
+    .catch((e) => {
+      DebugSubject_.next("getAudio() error: " + e.name);
+    })
+    .finally(() => IsMediaConfiguredSubject_.next(true));
+
+const getDisplayMedia = () =>
   navigator.mediaDevices
     //@ts-ignore
     .getDisplayMedia({
       video: true,
       audio: true,
     })
-    //@ts-ignore
-    .then((stream) => {
-      LocalMediaSubject_.next(stream);
+    .then((stream: MediaStream) => {
+      ScreenMediaSubject_.next(stream);
       DebugSubject_.next("Local Media");
     })
-    //@ts-ignore
-    .catch(function (e) {
-      DebugSubject_.next("getUserMedia() error: " + e.name);
+    .catch((e: Error) => {
+      DebugSubject_.next("getDisplayMedia() error: " + e.name);
     });
 
 const initializeCanvas = () => {
-  canvas.width = SIZE;
-  canvas.height = SIZE;
+  try {
+    canvas = new OffscreenCanvas(SIZE, SIZE);
+  } catch (e) {
+    DebugSubject_.next(e);
+  }
 };
 
 const streamToImageHandler = (stream: MediaStream) => {
@@ -59,10 +74,20 @@ const streamToImageHandler = (stream: MediaStream) => {
 const update = () => {
   if (!canvas) return;
   canvas.getContext("2d")?.drawImage(video, 0, 0, SIZE, SIZE);
-  const data = canvas.toDataURL("image/jpeg");
-  const s = data.replace("data:image/jpeg;base64,", "");
-  if (!s) return;
-  ImageSubject_.next(s);
+  const data = canvas.convertToBlob({
+    type: "image/jpeg",
+    quality: 0.1,
+  });
+  data.then((blob) => {
+    var reader = new FileReader();
+    reader.readAsDataURL(blob);
+    reader.onloadend = function () {
+      let s = reader.result;
+      if (!s || typeof s !== "string") return;
+      s = s.replace("data:image/jpeg;base64,", "");
+      ImageSubject_.next(s);
+    };
+  });
 };
 
 const onLocalMediaHandler = (stream: MediaStream | null) => {
@@ -81,18 +106,24 @@ const onImageToImageDataMessageHandler = (image: string) => {
 
 const onShareScreenHandler = () => {
   DebugSubject_.next("Init Media");
-  getUserMedia();
+  getDisplayMedia();
 };
 
 const init = () => {
   initializeCanvas();
+  step();
   IsInitializedSubject.next(true);
 };
 
 const isInitializedFilter = () => IsInitializedSubject.getValue();
-const hasNoLocalMediaFilter = () => !LocalMediaSubject_.getValue();
 
-// Subscriptions1
+const step = () => {
+  OnRequestAnimationFrame_.next();
+  requestAnimationFrame(step);
+};
+
+// Subscriptions
+window.addEventListener("load", getAudio);
 
 _InitSubject.subscribe(init);
 
@@ -100,7 +131,7 @@ ImageSubject_.pipe(filter(isInitializedFilter)).subscribe(
   onImageToImageDataMessageHandler
 );
 
-LocalMediaSubject_.pipe(filter(isInitializedFilter)).subscribe(
+ScreenMediaSubject_.pipe(filter(isInitializedFilter)).subscribe(
   onLocalMediaHandler
 );
 
@@ -112,9 +143,10 @@ DebugSubject_.pipe(filter(isDebug)).subscribe((m) =>
   console.warn("Media Service: ", m)
 );
 
-interval(UPDATE_INTERVAL)
-  .pipe(filter(() => IsPresentingSubject_.getValue()))
-  .subscribe(update);
+OnRequestAnimationFrame_.pipe(
+  filter(() => IsPresentingSubject_.getValue()),
+  throttleTime(UPDATE_INTERVAL)
+).subscribe(update);
 
 // Export
 export class MediaService {
@@ -124,9 +156,9 @@ export class MediaService {
 
   // Output
   static IsPresentingSubject_ = IsPresentingSubject_;
-  static RemoteMediaSubject_ = RemoteMediaSubject_;
-  static LocalMediaSubject_ = LocalMediaSubject_;
-  static ImageSubject_ = ImageSubject_;
+  static IsMediaConfiguredSubject_ = IsMediaConfiguredSubject_;
+  static MediaSubject_ = MediaSubject_;
+  static ScreenMediaSubject_ = ScreenMediaSubject_;
   static ImageDataMessageSubject_ = ImageDataMessageSubject_;
   static DebugSubject_ = DebugSubject_;
 }

@@ -1,6 +1,7 @@
 import { EMessageType } from "../../../../shared/definitions";
 import { BackendService } from "../../../backend/backend";
 import { RTCService } from "../../../communication/rtc/rtc";
+import { InitService } from "../../../init/init";
 import { StateService } from "../../../state/state";
 import { UnityService } from "../../../unity/unity";
 import "../../index";
@@ -49,6 +50,24 @@ describe("Media Service", () => {
     MediaService.IsPresentingSubject_.next(false);
     MediaService.IsPresentingSubject_.next(true);
     expect(spy).toHaveBeenCalledTimes(2);
+    expect(spy).toHaveBeenCalledWith(false);
+  });
+
+  it("MediaService.IsAudioConfiguredSubject_ -> InitService._IsAudioConfiguredSubject", () => {
+    const spy = jest.fn();
+    InitService._IsMediaConfiguredSubject.subscribe(spy);
+    MediaService.IsMediaConfiguredSubject_.next(false);
+    MediaService.IsMediaConfiguredSubject_.next(true);
+    expect(spy).toHaveBeenCalledTimes(3);
+    expect(spy).toHaveBeenCalledWith(false);
+  });
+
+  it("MediaService.MediaSubject_ -> RTCService._MediaSubject", () => {
+    const spy = jest.fn();
+    InitService._IsMediaConfiguredSubject.subscribe(spy);
+    MediaService.IsMediaConfiguredSubject_.next(false);
+    MediaService.IsMediaConfiguredSubject_.next(true);
+    expect(spy).toHaveBeenCalledTimes(3);
     expect(spy).toHaveBeenCalledWith(false);
   });
 });
