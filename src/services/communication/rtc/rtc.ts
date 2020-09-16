@@ -27,10 +27,13 @@ const init = () => {
 
 const isInitializedFilter = () => _IsInitializedSubject.getValue();
 
-const onDataChannelHandler = (m: [string, string]) =>
+const onDataChannelHandler = (m: [string, string]) => {
+  DebugSubject_.next(m);
   OnDataChannelMessageSubject_.next(m);
+};
 
 const onBroadcastHandler = (message: string) => {
+  DebugSubject_.next(message);
   const client = ClientSubject_.getValue();
   if (!client) return;
   client.broadcastData(message);

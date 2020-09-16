@@ -105,7 +105,7 @@ LocalMediaSubject_.pipe(filter(isInitializedFilter)).subscribe(
 );
 
 _ShareScreenSubject
-  .pipe(filter(isInitializedFilter), filter(hasNoLocalMediaFilter))
+  // .pipe(filter(isInitializedFilter), filter(hasNoLocalMediaFilter))
   .subscribe(onShareScreenHandler);
 
 DebugSubject_.subscribe((m) => console.warn("Media Service: ", m));
