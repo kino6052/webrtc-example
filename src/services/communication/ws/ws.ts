@@ -5,6 +5,7 @@ import { Subject } from "rxjs/internal/Subject";
 import { BehaviorSubject } from "rxjs/internal/BehaviorSubject";
 import { filter } from "rxjs/internal/operators/filter";
 import { combineLatest } from "rxjs/internal/observable/combineLatest";
+import { isDebug } from "../../../const";
 
 // Input
 const _CommunicationSubject = new Subject<IMessage<unknown>>();
@@ -55,7 +56,9 @@ WebSocketsAgentSubject_.pipe(
 
 _CommunicationSubject.subscribe((m) => DebugSubject_.next(m));
 
-DebugSubject_.subscribe((m) => console.warn("WS Service: ", m));
+DebugSubject_.pipe(filter(isDebug)).subscribe((m) =>
+  console.warn("WS Service: ", m)
+);
 
 // Exports
 export class WSService {

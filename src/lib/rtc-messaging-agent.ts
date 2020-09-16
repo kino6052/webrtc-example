@@ -1,5 +1,6 @@
 import { filter } from "rxjs/internal/operators/filter";
 import { Subject } from "rxjs/internal/Subject";
+import { isDebug } from "../const";
 import { BroadcastingAgent, IMessage } from "./broadcast";
 
 export class RTCMessagingAgent {
@@ -25,7 +26,7 @@ export class RTCMessagingAgent {
     this.getOfferSubject().subscribe(this.onOfferHandler);
     this.getAnswerSubject().subscribe(this.onAnswerHandler);
     this.getCandidateSubject().subscribe(this.onCandidateHandler);
-    this.DebugSubject_.subscribe((m) =>
+    this.DebugSubject_.pipe(filter(isDebug)).subscribe((m) =>
       console.warn("RTC-Messaging-Agent: ", m)
     );
   }

@@ -1,4 +1,6 @@
+import { filter } from "rxjs/internal/operators/filter";
 import { Subject } from "rxjs/internal/Subject";
+import { isDebug } from "../const";
 import { generateId } from "../utils";
 import { BroadcastingAgent, IMessage } from "./broadcast";
 import { ConnectionManager } from "./connection-manager";
@@ -43,7 +45,9 @@ export class Client {
     this._LocalStreamSubject.subscribe();
     this.BroadcastingAgent.sendGreeting();
     this.DebugSubject_.next(["Client", this]);
-    this.DebugSubject_.subscribe((m) => console.warn("Client: ", m));
+    this.DebugSubject_.pipe(filter(isDebug)).subscribe((m) =>
+      console.warn("Client: ", m)
+    );
   }
 
   // Connection

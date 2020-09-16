@@ -1,5 +1,6 @@
 import { filter } from "rxjs/internal/operators/filter";
 import { Subject } from "rxjs/internal/Subject";
+import { isDebug } from "../const";
 import { generateId } from "../utils";
 
 type TCommunicationType = "greeting" | "farewell" | "individual";
@@ -41,7 +42,9 @@ export class BroadcastingAgent {
 
     this.getCommSubject().subscribe(this.messageHandler);
     this.getCommSubject().subscribe(this.greetingHandler);
-    this.DebugSubject_.subscribe((m) => console.warn("Broadcast: ", m));
+    this.DebugSubject_.pipe(filter(isDebug)).subscribe((m) =>
+      console.warn("Broadcast: ", m)
+    );
   }
 
   // Messaging Utils

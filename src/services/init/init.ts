@@ -2,6 +2,7 @@ import { BehaviorSubject } from "rxjs/internal/BehaviorSubject";
 import { combineLatest } from "rxjs/internal/observable/combineLatest";
 import { filter } from "rxjs/internal/operators/filter";
 import { Subject } from "rxjs/internal/Subject";
+import { isDebug } from "../../const";
 
 // Input
 const _IsWebSocketConnectionOpen = new BehaviorSubject<boolean>(false);
@@ -61,7 +62,9 @@ InitSubject_.subscribe(() => {
   DebugSubject_.next("INIT!");
 });
 
-DebugSubject_.subscribe((m) => console.warn("Init Service: ", m));
+DebugSubject_.pipe(filter(isDebug)).subscribe((m) =>
+  console.warn("Init Service: ", m)
+);
 
 // Exports
 export class InitService {

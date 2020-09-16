@@ -2,7 +2,7 @@ import { BehaviorSubject } from "rxjs/internal/BehaviorSubject";
 import { interval } from "rxjs/internal/observable/interval";
 import { filter } from "rxjs/internal/operators/filter";
 import { Subject } from "rxjs/internal/Subject";
-import { UPDATE_INTERVAL } from "../../const";
+import { isDebug, UPDATE_INTERVAL } from "../../const";
 import { EMessageType, IImageDataMessage } from "../../shared/definitions";
 
 const IsInitializedSubject = new BehaviorSubject(false);
@@ -108,7 +108,9 @@ _ShareScreenSubject
   // .pipe(filter(isInitializedFilter), filter(hasNoLocalMediaFilter))
   .subscribe(onShareScreenHandler);
 
-DebugSubject_.subscribe((m) => console.warn("Media Service: ", m));
+DebugSubject_.pipe(filter(isDebug)).subscribe((m) =>
+  console.warn("Media Service: ", m)
+);
 
 interval(UPDATE_INTERVAL)
   .pipe(filter(() => IsPresentingSubject_.getValue()))

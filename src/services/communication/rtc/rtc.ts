@@ -3,6 +3,7 @@ import { debounceTime } from "rxjs/internal/operators/debounceTime";
 import { filter } from "rxjs/internal/operators/filter";
 import { switchMap } from "rxjs/internal/operators/switchMap";
 import { Subject } from "rxjs/internal/Subject";
+import { isDebug } from "../../../const";
 import { IMessage } from "../../../lib/broadcast";
 import { Client } from "../../../lib/client";
 
@@ -71,7 +72,9 @@ ClientSubject_.pipe(
   switchMap((client) => client!.DebugSubject_)
 ).subscribe((m) => DebugSubject_.next(m));
 
-DebugSubject_.subscribe((m) => console.warn("RTC Service: ", m));
+DebugSubject_.pipe(filter(isDebug)).subscribe((m) =>
+  console.warn("RTC Service: ", m)
+);
 
 // Exports
 export class RTCService {

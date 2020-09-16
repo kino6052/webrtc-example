@@ -12,7 +12,7 @@ import {
 // Input
 const _InitSubject = new Subject();
 const _ClientSubject = new Subject<Client>();
-const _IDSubject_ = new Subject<string>();
+const _IDSubject_ = new Subject<string | null>();
 const _CurrentTVChannelStateSubject = new Subject<TTVChannel>();
 const _TVProgramStateSubject = new Subject<TTVProgram>();
 const _IsPresentingSubject = new Subject<boolean>();
@@ -31,7 +31,7 @@ const updateState = (partial: Partial<IGameState>) => {
 
 const stateUpdateHandler = ([client, id, channel, program, isPresenting]: [
   Client,
-  string,
+  string | null,
   TTVChannel,
   TTVProgram,
   boolean

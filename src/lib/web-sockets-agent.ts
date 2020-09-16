@@ -1,6 +1,7 @@
 import { BehaviorSubject } from "rxjs/internal/BehaviorSubject";
 import { filter } from "rxjs/internal/operators/filter";
 import { Subject } from "rxjs/internal/Subject";
+import { isDebug } from "../const";
 import { IMessage } from "./broadcast";
 
 export class WebSocketsAgent {
@@ -27,7 +28,9 @@ export class WebSocketsAgent {
     this.IsWebSocketReadySubject.pipe(filter((isReady) => isReady)).subscribe(
       this.onIsWebSocketReadyHandler
     );
-    this.DebugSubject_.subscribe((m) => console.warn("WebSockets Agent: ", m));
+    this.DebugSubject_.pipe(filter(isDebug)).subscribe((m) =>
+      console.warn("WebSockets Agent: ", m)
+    );
   }
 
   onIsWebSocketReadyHandler = () => {

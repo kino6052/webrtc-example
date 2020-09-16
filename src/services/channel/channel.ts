@@ -2,6 +2,7 @@ import { BehaviorSubject } from "rxjs/internal/BehaviorSubject";
 import { combineLatest } from "rxjs/internal/observable/combineLatest";
 import { filter } from "rxjs/internal/operators/filter";
 import { Subject } from "rxjs/internal/Subject";
+import { isDebug } from "../../const";
 import {
   IImageDataMessage,
   TTVChannel,
@@ -23,6 +24,7 @@ const _ImageDataMessageSubject = new Subject<[string, IImageDataMessage]>();
 
 // Output
 const ImageDataMessageSubject_ = new Subject<IImageDataMessage>();
+const DebugSubject_ = new Subject();
 
 // Internal
 const IsInitializedSubject = new BehaviorSubject(false);
@@ -35,10 +37,13 @@ const filterCurrentChannelImageDataMessages = ([program, channel, tuple]: [
   TTVChannel,
   [string, IImageDataMessage]
 ]) => {
+  DebugSubject_.next(["Channel Debug #1: ", program, channel, tuple]);
   const [from, message] = tuple;
   const id = program[channel];
+  DebugSubject_.next(["Channel Debug #2: ", id]);
   if (!id) return;
   if (id !== from) return;
+  DebugSubject_.next("Channel Debug #3");
   ImageDataMessageSubject_.next(message);
 };
 
@@ -52,6 +57,10 @@ combineLatest([
 ])
   .pipe(filter(() => IsInitializedSubject.getValue()))
   .subscribe(filterCurrentChannelImageDataMessages);
+
+DebugSubject_.pipe(filter(isDebug)).subscribe((m) =>
+  console.warn("Channel Service: ", m)
+);
 
 // External
 export class ChannelService {

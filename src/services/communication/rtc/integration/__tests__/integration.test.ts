@@ -4,6 +4,8 @@ import "../../../index";
 import { BackendService } from "../../../../backend/backend";
 import { WSService } from "../../../ws/ws";
 import { IMessage } from "../../../../../lib/broadcast";
+import { OutgoingMessageService } from "../../../outgoing/outgoing";
+import { StateService } from "../../../../state/state";
 
 describe("Incoming Message Service", () => {
   it("RTCService.OnDataChannelMessagingSubject_ -> IncomingMessageService._MessageSubject", () => {
@@ -27,6 +29,30 @@ describe("Incoming Message Service", () => {
     const input: IMessage<unknown> = { id: "1", type: "greeting", data: {} };
     WSService._CommunicationSubject.subscribe(spy);
     RTCService.CommunicationSubject_.next(input);
+    expect(spy).toHaveBeenCalledTimes(1);
+  });
+
+  it("RTCService.IDSubject_ -> BackendService._IDSubject", () => {
+    const spy = jest.fn();
+    const input = "1";
+    BackendService._IDSbuject.subscribe(spy);
+    RTCService.IDSubject_.next(input);
+    expect(spy).toHaveBeenCalledTimes(1);
+  });
+
+  it("RTCService.IDSubject_ -> OutgoingMessageService._IDSubject", () => {
+    const spy = jest.fn();
+    const input = "1";
+    OutgoingMessageService._IDSubject_.subscribe(spy);
+    RTCService.IDSubject_.next(input);
+    expect(spy).toHaveBeenCalledTimes(1);
+  });
+
+  it("RTCService.IDSubject_ -> StateService._IDSubject", () => {
+    const spy = jest.fn();
+    const input = "1";
+    StateService._IDSubject_.subscribe(spy);
+    RTCService.IDSubject_.next(input);
     expect(spy).toHaveBeenCalledTimes(1);
   });
 });

@@ -1,6 +1,7 @@
 import { BehaviorSubject } from "rxjs/internal/BehaviorSubject";
 import { filter } from "rxjs/internal/operators/filter";
 import { Subject } from "rxjs/internal/Subject";
+import { isDebug } from "../../../const";
 import {
   EMessageType,
   IImageDataMessage,
@@ -59,7 +60,9 @@ MessageSubject_.pipe(
 ).subscribe((m) => PositionMessageSubject_.next(m as IPositionMessage));
 
 // Debugging
-DebugSubject_.subscribe((m) => console.warn("Outgoing Message Service: ", m));
+DebugSubject_.pipe(filter(isDebug)).subscribe((m) =>
+  console.warn("Outgoing Message Service: ", m)
+);
 PresentMessageSubject_.subscribe((m) => DebugSubject_.next(m));
 
 // Exports

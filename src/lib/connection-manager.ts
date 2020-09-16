@@ -1,4 +1,6 @@
+import { filter } from "rxjs/internal/operators/filter";
 import { Subject } from "rxjs/internal/Subject";
+import { isDebug } from "../const";
 import { RTCMessagingAgent } from "./rtc-messaging-agent";
 
 const configuration = {
@@ -51,7 +53,9 @@ export class ConnectionManager {
       this.onSetRemoteDescriptionHandler
     );
     this.ma.OnAddCandidateSubject.subscribe(this.onAddCandidateHandler);
-    this.DebugSubject_.subscribe((m) => console.warn("Connection Manager", m));
+    this.DebugSubject_.pipe(filter(isDebug)).subscribe((m) =>
+      console.warn("Connection Manager", m)
+    );
   }
 
   createConnection = (id: string) => {
