@@ -1,4 +1,3 @@
-import { CommunicationSubject } from "../../../../lib/broadcast";
 import { BackendService } from "../../../backend/backend";
 import { IncomingMessageService } from "../../incoming/incoming";
 import { WSService } from "../../ws/ws";
@@ -12,4 +11,6 @@ RTCService.UpdateStateSubject_.subscribe(() =>
   BackendService._RefreshSubject.next()
 );
 
-CommunicationSubject.subscribe((m) => WSService._CommunicationSubject.next(m));
+RTCService.CommunicationSubject_.subscribe((m) => {
+  WSService._CommunicationSubject.next(m);
+});

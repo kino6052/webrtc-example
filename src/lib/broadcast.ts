@@ -11,9 +11,6 @@ export interface IMessage<T> {
   to?: string;
 }
 
-export const CommunicationSubject = new Subject<IMessage<unknown>>();
-export const DebugSubject_ = new Subject();
-
 export class BroadcastingAgent {
   // Participants
   public participants: string[] = [];
@@ -23,24 +20,28 @@ export class BroadcastingAgent {
   public removeParticipantSubject = new Subject<string>();
   private commSubject: Subject<IMessage<unknown>>;
 
+  // Output
+  public DebugSubject_ = new Subject();
+
   constructor(
     public id: string = generateId(4, 4),
     communicationChannel: Subject<IMessage<unknown>>
   ) {
     this.commSubject = communicationChannel;
 
-    DebugSubject_.next("Broadcast Test #1");
-    DebugSubject_.next(["Broadcast Test #4", communicationChannel]);
+    this.DebugSubject_.next("Broadcast Test #1");
+    this.DebugSubject_.next(["Broadcast Test #4", communicationChannel]);
 
     this.commSubject.subscribe((m) =>
-      DebugSubject_.next(["Broadcast Test #5", m])
+      this.DebugSubject_.next(["Broadcast Test #5", m])
     );
     this.getCommSubject().subscribe((m) =>
-      DebugSubject_.next(["Broadcast Test #6", m])
+      this.DebugSubject_.next(["Broadcast Test #6", m])
     );
 
     this.getCommSubject().subscribe(this.messageHandler);
     this.getCommSubject().subscribe(this.greetingHandler);
+    this.DebugSubject_.subscribe((m) => console.warn("Broadcast: ", m));
   }
 
   // Messaging Utils
@@ -52,7 +53,7 @@ export class BroadcastingAgent {
     this.getCommSubject().pipe(filter(({ to }) => to === this.id));
 
   messageHandler = (message: IMessage<unknown>) => {
-    DebugSubject_.next(message);
+    this.DebugSubject_.next(message);
   };
 
   sendIndividualRequest = <T>(data: T, to: string) => {
@@ -85,14 +86,14 @@ export class BroadcastingAgent {
   // Salutations
 
   greetingHandler = (message: IMessage<unknown>) => {
-    DebugSubject_.next("Broadcast Test #2");
+    this.DebugSubject_.next("Broadcast Test #2");
     const { id, type } = message;
     const participants = this.getParticipants();
     if (type !== "greeting") return;
-    DebugSubject_.next("Broadcast Test #3");
-    DebugSubject_.next(["Greeting", message]);
+    this.DebugSubject_.next("Broadcast Test #3");
+    this.DebugSubject_.next(["Greeting", message]);
     if (participants.includes(id)) return;
-    DebugSubject_.next(`ID: ${this.id}, Add Participant`);
+    this.DebugSubject_.next(`ID: ${this.id}, Add Participant`);
     this.addParticipant(id);
     setTimeout(this.sendGreeting, 1000);
   };

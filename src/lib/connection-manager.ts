@@ -1,5 +1,4 @@
 import { Subject } from "rxjs/internal/Subject";
-import { DebugSubject_ } from "./broadcast";
 import { RTCMessagingAgent } from "./rtc-messaging-agent";
 
 const configuration = {
@@ -39,6 +38,7 @@ export class ConnectionManager {
   public OnConnectionCreatedSubject = new Subject<
     [string, RTCPeerConnection]
   >();
+  public DebugSubject_ = new Subject();
 
   constructor(private ma: RTCMessagingAgent) {
     this.ma.OnAddParticipantSubject.subscribe(this.onAddParticipantHandler);
@@ -51,11 +51,12 @@ export class ConnectionManager {
       this.onSetRemoteDescriptionHandler
     );
     this.ma.OnAddCandidateSubject.subscribe(this.onAddCandidateHandler);
+    this.DebugSubject_.subscribe((m) => console.warn("Connection Manager", m));
   }
 
   createConnection = (id: string) => {
     const _id = this.ma.broadcastingAgent.id;
-    DebugSubject_.next(
+    this.DebugSubject_.next(
       `ID: ${id}, Create Connection in ${this.ma.broadcastingAgent.id}`
     );
     const connection = new RTCPeerConnection(configuration);
@@ -68,7 +69,7 @@ export class ConnectionManager {
   // Add/Remove Participants
 
   onAddParticipantHandler = (id: string) => {
-    DebugSubject_.next(
+    this.DebugSubject_.next(
       `${this.ma.broadcastingAgent.id} On Add Participant Handler`
     );
     const oldConnection = this.connections[id];
@@ -78,7 +79,7 @@ export class ConnectionManager {
       .createOffer()
       .then(this.ma.onOfferCreatedHandler(id))
       .catch((e) => {
-        DebugSubject_.next([`Couldn't create offer for id ${id}`, e]);
+        this.DebugSubject_.next([`Couldn't create offer for id ${id}`, e]);
       });
   };
 
@@ -101,7 +102,7 @@ export class ConnectionManager {
     message: [string, RTCSessionDescriptionInit]
   ) => {
     const [id, sessionDescription] = message;
-    DebugSubject_.next(
+    this.DebugSubject_.next(
       `Setting remote description in ${this.ma.broadcastingAgent.id} for ${id}`
     );
     let connection = this.connections[id];
@@ -117,7 +118,7 @@ export class ConnectionManager {
   // Connection Logistics
 
   onICECandidateHandler = (id: string) => (ev: RTCPeerConnectionIceEvent) => {
-    DebugSubject_.next(`ID: ${id}, On ICE Candidate Handler`);
+    this.DebugSubject_.next(`ID: ${id}, On ICE Candidate Handler`);
     const candidate = ev.candidate;
     if (!candidate) return;
     this.ma.onCandidateCreatedHandler(id)(candidate);
@@ -133,14 +134,14 @@ export class ConnectionManager {
       .createAnswer()
       .then(this.ma.onAnswerCreatedHandler(id))
       .catch((e) => {
-        DebugSubject_.next([`Couldn't create answer in ID ${id}`, e]);
+        this.DebugSubject_.next([`Couldn't create answer in ID ${id}`, e]);
       });
     return connection;
   };
 
   onAddCandidateHandler = (message: [string, RTCIceCandidate]) => {
     const [id, candidate] = message;
-    DebugSubject_.next([`Add Candidate`, candidate]);
+    this.DebugSubject_.next([`Add Candidate`, candidate]);
     const connection = this.connections[id];
     if (!connection) return;
     connection.addIceCandidate(candidate);

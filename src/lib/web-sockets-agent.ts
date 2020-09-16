@@ -1,7 +1,7 @@
 import { BehaviorSubject } from "rxjs/internal/BehaviorSubject";
 import { filter } from "rxjs/internal/operators/filter";
 import { Subject } from "rxjs/internal/Subject";
-import { DebugSubject_, IMessage } from "./broadcast";
+import { IMessage } from "./broadcast";
 
 export class WebSocketsAgent {
   private ws: WebSocket;
@@ -13,8 +13,12 @@ export class WebSocketsAgent {
   // Subjects
   public IsWebSocketReadySubject = new BehaviorSubject(false);
   public OnCloseSubject = new Subject();
+  public DebugSubject_ = new Subject();
 
-  constructor(private CommunicationSubject: Subject<IMessage<unknown>>) {
+  constructor(
+    private _CommunicationSubject: Subject<IMessage<unknown>>,
+    private CommunicationSubject_: Subject<IMessage<unknown>>
+  ) {
     const url = this.getURL();
     this.ws = new WebSocket(url);
     this.ws.onmessage = this.onMessageHandler;
@@ -23,18 +27,21 @@ export class WebSocketsAgent {
     this.IsWebSocketReadySubject.pipe(filter((isReady) => isReady)).subscribe(
       this.onIsWebSocketReadyHandler
     );
+    this.DebugSubject_.subscribe((m) => console.warn("WebSockets Agent: ", m));
   }
 
   onIsWebSocketReadyHandler = () => {
-    this.CommunicationSubject.pipe(
-      filter(() => {
-        const _canSend = this.canSend;
-        if (!this.canSend) this.canSend = true;
-        return _canSend;
-      })
-    ).subscribe((message) => {
-      this.sendMessage(JSON.stringify(message));
-    });
+    this._CommunicationSubject
+      .pipe(
+        filter(() => {
+          const _canSend = this.canSend;
+          if (!this.canSend) this.canSend = true;
+          return _canSend;
+        })
+      )
+      .subscribe((message) => {
+        this.sendMessage(JSON.stringify(message));
+      });
   };
 
   getURL = () => {
@@ -44,14 +51,14 @@ export class WebSocketsAgent {
   };
 
   onMessageHandler = (event: MessageEvent) => {
-    DebugSubject_.next(event.data);
+    this.DebugSubject_.next(event.data);
     const message = JSON.parse(event.data) as IMessage<unknown>;
     this.canSend = false;
-    this.CommunicationSubject.next(message);
+    this.CommunicationSubject_.next(message);
   };
 
   onOpenHandler = () => {
-    DebugSubject_.next("WS is Open");
+    this.DebugSubject_.next("WS is Open");
     this.isOpen = true;
     this.IsWebSocketReadySubject.next(this.isOpen);
   };
@@ -62,7 +69,7 @@ export class WebSocketsAgent {
   };
 
   sendMessage = (message: string) => {
-    DebugSubject_.next(message);
+    this.DebugSubject_.next(message);
     this.ws.send(message);
   };
 }

@@ -1,9 +1,5 @@
 import { WebSocketsAgent } from "../../../lib/web-sockets-agent";
-import {
-  CommunicationSubject,
-  DebugSubject_,
-  IMessage,
-} from "../../../lib/broadcast";
+import { IMessage } from "../../../lib/broadcast";
 import { switchMap } from "rxjs/internal/operators/switchMap";
 import { Subject } from "rxjs/internal/Subject";
 import { BehaviorSubject } from "rxjs/internal/BehaviorSubject";
@@ -16,15 +12,17 @@ const _IsWindowLoadedSubject = new Subject();
 const _IsRemoteSubject = new BehaviorSubject<boolean>(false);
 
 // Output
+const CommunicationSubject_ = new Subject<IMessage<unknown>>();
 const WebSocketsAgentSubject_ = new BehaviorSubject<WebSocketsAgent | null>(
   null
 );
 const ResetAgentSubject_ = new Subject();
 const IsWebSocketConnectionOpen_ = new BehaviorSubject(false);
+const DebugSubject_ = new Subject();
 
 // Methods
 const init = () => {
-  const ws = new WebSocketsAgent(CommunicationSubject);
+  const ws = new WebSocketsAgent(_CommunicationSubject, CommunicationSubject_);
   WebSocketsAgentSubject_.next(ws);
 };
 
@@ -67,6 +65,7 @@ export class WSService {
   static _IsRemoteSubject = _IsRemoteSubject;
 
   // Output
+  static CommunicationSubject_ = CommunicationSubject_;
   static WebSocketsAgentSubject_ = WebSocketsAgentSubject_;
   static ResetAgentSubject_ = ResetAgentSubject_;
   static IsWebSocketConnectionOpen_ = IsWebSocketConnectionOpen_;

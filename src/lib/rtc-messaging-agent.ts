@@ -1,6 +1,6 @@
 import { filter } from "rxjs/internal/operators/filter";
 import { Subject } from "rxjs/internal/Subject";
-import { BroadcastingAgent, DebugSubject_, IMessage } from "./broadcast";
+import { BroadcastingAgent, IMessage } from "./broadcast";
 
 export class RTCMessagingAgent {
   // Subjects
@@ -13,6 +13,7 @@ export class RTCMessagingAgent {
     [string, RTCSessionDescriptionInit]
   >();
   public OnAddCandidateSubject = new Subject<[string, RTCIceCandidate]>();
+  public DebugSubject_ = new Subject();
 
   constructor(public broadcastingAgent: BroadcastingAgent) {
     this.broadcastingAgent.addParticipantSubject.subscribe(
@@ -24,6 +25,9 @@ export class RTCMessagingAgent {
     this.getOfferSubject().subscribe(this.onOfferHandler);
     this.getAnswerSubject().subscribe(this.onAnswerHandler);
     this.getCandidateSubject().subscribe(this.onCandidateHandler);
+    this.DebugSubject_.subscribe((m) =>
+      console.warn("RTC-Messaging-Agent: ", m)
+    );
   }
 
   // Add/Remove Participants
@@ -50,7 +54,7 @@ export class RTCMessagingAgent {
   onOfferCreatedHandler = (id: string) => (
     sessionDescription: RTCSessionDescriptionInit
   ) => {
-    DebugSubject_.next([
+    this.DebugSubject_.next([
       `Offer for ${id} Created in ${this.broadcastingAgent.id}`,
       sessionDescription,
     ]);
@@ -79,7 +83,7 @@ export class RTCMessagingAgent {
   onAnswerCreatedHandler = (id: string) => (
     sessionDescription: RTCSessionDescriptionInit
   ) => {
-    DebugSubject_.next([
+    this.DebugSubject_.next([
       `Answer for ${id} Created in ${this.broadcastingAgent.id}`,
       sessionDescription,
     ]);

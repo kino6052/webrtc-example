@@ -3,16 +3,17 @@ import { debounceTime } from "rxjs/internal/operators/debounceTime";
 import { filter } from "rxjs/internal/operators/filter";
 import { switchMap } from "rxjs/internal/operators/switchMap";
 import { Subject } from "rxjs/internal/Subject";
-import {
-  CommunicationSubject,
-  DebugSubject_ as DS_,
-} from "../../../lib/broadcast";
+import { IMessage } from "../../../lib/broadcast";
 import { Client } from "../../../lib/client";
 
 // Input
 const _InitSubject = new Subject();
 const _IsInitializedSubject = new BehaviorSubject<boolean>(false);
 const _BroadcastSubject = new Subject<string>();
+const _CommunicationSubject = new Subject<IMessage<unknown>>();
+
+// Output
+const CommunicationSubject_ = new Subject<IMessage<unknown>>();
 const ClientSubject_ = new BehaviorSubject<Client | null>(null);
 const IDSubject_ = new BehaviorSubject<string | null>(null);
 const UpdateStateSubject_ = new Subject();
@@ -21,7 +22,7 @@ const DebugSubject_ = new Subject();
 
 // Methods
 const init = () => {
-  const client = Client.createClient();
+  const client = Client.createClient(CommunicationSubject_);
   // @ts-ignore
   window.client = client;
   ClientSubject_.next(client);
@@ -59,19 +60,28 @@ ClientSubject_.pipe(
 
 _BroadcastSubject.subscribe(onBroadcastHandler);
 
-CommunicationSubject.pipe(debounceTime(100)).subscribe(() =>
+_CommunicationSubject.subscribe((m) => CommunicationSubject_.next(m));
+
+CommunicationSubject_.pipe(debounceTime(100)).subscribe(() =>
   UpdateStateSubject_.next()
 );
 
-DebugSubject_.subscribe((m) => console.warn("RTC Service: ", m));
+ClientSubject_.pipe(
+  filter((c) => !!c),
+  switchMap((client) => client!.DebugSubject_)
+).subscribe((m) => DebugSubject_.next(m));
 
-DS_.subscribe((m) => console.warn("Broadcasting Agent", m));
+DebugSubject_.subscribe((m) => console.warn("RTC Service: ", m));
 
 // Exports
 export class RTCService {
   static _InitSubject = _InitSubject;
   static _IsInitializedSubject = _IsInitializedSubject;
   static _BroadcastSubject = _BroadcastSubject;
+  static _CommunicationSubject = _CommunicationSubject;
+
+  // Output
+  static CommunicationSubject_ = CommunicationSubject_;
   static ClientSubject_ = ClientSubject_;
   static IDSubject_ = IDSubject_;
   static UpdateStateSubject_ = UpdateStateSubject_;
