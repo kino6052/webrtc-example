@@ -29,6 +29,16 @@ export class BroadcastingAgent {
   ) {
     this.commSubject = communicationChannel;
 
+    DebugSubject_.next("Broadcast Test #1");
+    DebugSubject_.next(["Broadcast Test #4", communicationChannel]);
+
+    this.commSubject.subscribe((m) =>
+      DebugSubject_.next(["Broadcast Test #5", m])
+    );
+    this.getCommSubject().subscribe((m) =>
+      DebugSubject_.next(["Broadcast Test #6", m])
+    );
+
     this.getCommSubject().subscribe(this.messageHandler);
     this.getCommSubject().subscribe(this.greetingHandler);
   }
@@ -75,9 +85,12 @@ export class BroadcastingAgent {
   // Salutations
 
   greetingHandler = (message: IMessage<unknown>) => {
+    DebugSubject_.next("Broadcast Test #2");
     const { id, type } = message;
     const participants = this.getParticipants();
     if (type !== "greeting") return;
+    DebugSubject_.next("Broadcast Test #3");
+    DebugSubject_.next(["Greeting", message]);
     if (participants.includes(id)) return;
     DebugSubject_.next(`ID: ${this.id}, Add Participant`);
     this.addParticipant(id);

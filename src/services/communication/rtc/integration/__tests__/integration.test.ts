@@ -2,6 +2,8 @@ import { IncomingMessageService } from "../../../incoming/incoming";
 import { RTCService } from "../../rtc";
 import "../../../index";
 import { BackendService } from "../../../../backend/backend";
+import { WSService } from "../../../ws/ws";
+import { CommunicationSubject, IMessage } from "../../../../../lib/broadcast";
 
 describe("Incoming Message Service", () => {
   it("RTCService.OnDataChannelMessagingSubject_ -> IncomingMessageService._MessageSubject", () => {
@@ -17,6 +19,14 @@ describe("Incoming Message Service", () => {
     const spy = jest.fn();
     BackendService._RefreshSubject.subscribe(spy);
     RTCService.UpdateStateSubject_.next();
+    expect(spy).toHaveBeenCalledTimes(1);
+  });
+
+  it("CommunicationSubject -> WSService._CommunicationService", () => {
+    const spy = jest.fn();
+    const input: IMessage<unknown> = { id: "1", type: "greeting", data: {} };
+    WSService._CommunicationSubject.subscribe(spy);
+    CommunicationSubject.next();
     expect(spy).toHaveBeenCalledTimes(1);
   });
 });

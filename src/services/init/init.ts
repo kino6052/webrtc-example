@@ -11,7 +11,7 @@ const _EnvironmentSubject = new BehaviorSubject<"local" | "remote">("remote");
 const _IsWindowLoadedSubject = new BehaviorSubject<boolean>(false);
 const _IsGameLoadedSubject = new BehaviorSubject(false);
 const InitSubject_ = new Subject();
-const DebugSubject_ = new Subject<string>();
+const DebugSubject_ = new Subject();
 const EnvSubject_ = new BehaviorSubject<"production" | "development">(
   "production"
 );
@@ -43,6 +43,11 @@ combineLatest([
   .pipe(
     filter(
       ([isWindowLoadedSubject, isGameLoaded, IsWebSocketConnectionOpen]) => {
+        DebugSubject_.next([
+          isWindowLoadedSubject,
+          isGameLoaded,
+          IsWebSocketConnectionOpen,
+        ]);
         const isRemote = getIsRemote();
         if (!isWindowLoadedSubject || !isGameLoaded) return false;
         if (isRemote && !IsWebSocketConnectionOpen) return false;
@@ -55,6 +60,8 @@ combineLatest([
 InitSubject_.subscribe(() => {
   DebugSubject_.next("INIT!");
 });
+
+DebugSubject_.subscribe((m) => console.warn("Init Service: ", m));
 
 // Exports
 export class InitService {

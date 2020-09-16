@@ -3,7 +3,10 @@ import { debounceTime } from "rxjs/internal/operators/debounceTime";
 import { filter } from "rxjs/internal/operators/filter";
 import { switchMap } from "rxjs/internal/operators/switchMap";
 import { Subject } from "rxjs/internal/Subject";
-import { CommunicationSubject } from "../../../lib/broadcast";
+import {
+  CommunicationSubject,
+  DebugSubject_ as DS_,
+} from "../../../lib/broadcast";
 import { Client } from "../../../lib/client";
 
 // Input
@@ -19,9 +22,11 @@ const DebugSubject_ = new Subject();
 // Methods
 const init = () => {
   const client = Client.createClient();
+  // @ts-ignore
+  window.client = client;
   ClientSubject_.next(client);
   _IsInitializedSubject.next(true);
-  DebugSubject_.next("Remote");
+  // DebugSubject_.next("Remote");
   IDSubject_.next(client.id);
 };
 
@@ -33,7 +38,7 @@ const onDataChannelHandler = (m: [string, string]) => {
 };
 
 const onBroadcastHandler = (message: string) => {
-  DebugSubject_.next(message);
+  // DebugSubject_.next(message);
   const client = ClientSubject_.getValue();
   if (!client) return;
   client.broadcastData(message);
@@ -43,10 +48,14 @@ const onBroadcastHandler = (message: string) => {
 _InitSubject.subscribe(init);
 
 ClientSubject_.pipe(
-  filter(isInitializedFilter),
   filter((c) => !!c),
   switchMap((client) => client!.OnDataChannelMessageSubject_)
 ).subscribe(onDataChannelHandler);
+
+ClientSubject_.pipe(
+  filter((c) => !!c),
+  switchMap((client) => client!.OnDataChannelSubject_)
+).subscribe(console.warn);
 
 _BroadcastSubject.subscribe(onBroadcastHandler);
 
@@ -55,6 +64,8 @@ CommunicationSubject.pipe(debounceTime(100)).subscribe(() =>
 );
 
 DebugSubject_.subscribe((m) => console.warn("RTC Service: ", m));
+
+DS_.subscribe((m) => console.warn("Broadcasting Agent", m));
 
 // Exports
 export class RTCService {
