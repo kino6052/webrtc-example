@@ -1,4 +1,7 @@
-import { BehaviorSubject, Subject } from "rxjs";
+import { BehaviorSubject } from "rxjs/internal/BehaviorSubject";
+import { filter } from "rxjs/internal/operators/filter";
+import { switchMap } from "rxjs/internal/operators/switchMap";
+import { Subject } from "rxjs/internal/Subject";
 import {
   TNames,
   TTVChannel,
@@ -7,11 +10,14 @@ import {
   URL_TV_CHANNEL,
 } from "../../shared/definitions";
 
+const IsInitializedSubject = new BehaviorSubject(false);
+
 // Incoming
 const _InitSubject = new Subject();
 const _RefreshSubject = new Subject();
-const _UseTVChannelSubject = new Subject<[string, TTVChannel]>();
-const _SetNameSubject = new Subject<[string, string]>();
+const _IDSubject = new BehaviorSubject<string | null>(null);
+const _UseTVChannelSubject = new Subject<TTVChannel>();
+const _SetNameSubject = new Subject<string>();
 
 // Outgoing
 const TVProgramStateSubject_ = new BehaviorSubject<TTVProgram>({});
@@ -57,23 +63,32 @@ const getTVProgram = () =>
     TVProgramStateSubject_.next(program);
   });
 
+const onChannelHandler = (channel: TTVChannel) => {
+  const id = _IDSubject.getValue();
+  if (!id) return;
+  sendTVChannel(id, channel);
+};
+
+const onRefreshHandler = () => {
+  getTVProgram();
+  getNames();
+};
+
 // Subscriptions
-_InitSubject.subscribe(() => {
-  _UseTVChannelSubject.subscribe(([id, channel]) => {
-    sendTVChannel(id, channel);
-  });
-  _SetNameSubject.subscribe(([id, name]) => {
-    sendName(id, name);
-  });
-  _RefreshSubject.subscribe(() => {
-    getTVProgram();
-    getNames();
-  });
-});
+_InitSubject.subscribe(() => IsInitializedSubject.next(true));
+
+_UseTVChannelSubject
+  .pipe(filter(() => IsInitializedSubject.getValue()))
+  .subscribe(onChannelHandler);
+
+_RefreshSubject
+  .pipe(filter(() => IsInitializedSubject.getValue()))
+  .subscribe(onRefreshHandler);
 
 // Exports
 export class BackendService {
   // Incoming
+  static _IDSbuject = _IDSubject;
   static _InitSubject = _InitSubject;
   static _RefreshSubject = _RefreshSubject;
   static _UseTVChannelSubject = _UseTVChannelSubject;

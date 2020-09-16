@@ -1,5 +1,5 @@
 import { BehaviorSubject, Subject } from "rxjs";
-import { filter } from "rxjs/operators";
+import { filter, switchMap } from "rxjs/operators";
 
 const getRandomNumbers = (length: number) => {
   const value = Array.from(

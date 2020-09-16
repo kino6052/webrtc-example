@@ -1,6 +1,6 @@
 import { Subject } from "rxjs";
 import { filter } from "rxjs/operators";
-import { DebugSubject, generateId } from "../utils";
+import { generateId } from "../utils";
 
 type TCommunicationType = "greeting" | "farewell" | "individual";
 
@@ -12,6 +12,7 @@ export interface IMessage<T> {
 }
 
 export const CommunicationSubject = new Subject<IMessage<unknown>>();
+export const DebugSubject_ = new Subject();
 
 export class BroadcastingAgent {
   // Participants
@@ -41,7 +42,7 @@ export class BroadcastingAgent {
     this.getCommSubject().pipe(filter(({ to }) => to === this.id));
 
   messageHandler = (message: IMessage<unknown>) => {
-    DebugSubject.next(message);
+    DebugSubject_.next(message);
   };
 
   sendIndividualRequest = <T>(data: T, to: string) => {
@@ -78,7 +79,7 @@ export class BroadcastingAgent {
     const participants = this.getParticipants();
     if (type !== "greeting") return;
     if (participants.includes(id)) return;
-    DebugSubject.next(`ID: ${this.id}, Add Participant`);
+    DebugSubject_.next(`ID: ${this.id}, Add Participant`);
     this.addParticipant(id);
     setTimeout(this.sendGreeting, 1000);
   };

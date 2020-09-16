@@ -1,8 +1,12 @@
-import { DebugSubject, generateId } from "../utils";
-import { ConnectionManager } from "./connection-manager";
-import { BroadcastingAgent, CommunicationSubject } from "./broadcast";
-import { RTCMessagingAgent } from "./rtc-messaging-agent";
 import { Subject } from "rxjs";
+import { generateId } from "../utils";
+import {
+  BroadcastingAgent,
+  CommunicationSubject,
+  DebugSubject_,
+} from "./broadcast";
+import { ConnectionManager } from "./connection-manager";
+import { RTCMessagingAgent } from "./rtc-messaging-agent";
 
 export class Client {
   public id = generateId(4, 4);
@@ -37,7 +41,7 @@ export class Client {
     );
     this._LocalStreamSubject.subscribe();
     this.BroadcastingAgent.sendGreeting();
-    DebugSubject.next(["Client", this.id]);
+    DebugSubject_.next(["Client", this.id]);
   }
 
   // Connection
@@ -47,17 +51,17 @@ export class Client {
     connection.ondatachannel = this.onDataChannelHandler(id);
     connection.ontrack = this.onTrackHandler(id);
     const dataChannel = connection.createDataChannel(`data-channel-${id}`);
-    dataChannel.onopen = (ev) => DebugSubject.next("Opened Channel");
-    dataChannel.onerror = (ev) => DebugSubject.next(JSON.stringify(ev));
+    dataChannel.onopen = (ev) => DebugSubject_.next("Opened Channel");
+    dataChannel.onerror = (ev) => DebugSubject_.next(JSON.stringify(ev));
     this.dataChannels[id] = dataChannel;
     dataChannel.onmessage = this.onDataChannelMessageHandler(id);
-    DebugSubject.next(this);
+    DebugSubject_.next(this);
   };
 
   onConnected = (id: string, connection: RTCPeerConnection) => {
     connection.onconnectionstatechange = (ev) => {
       if (connection.connectionState === "connected") {
-        DebugSubject.next(`Connection ${id}, Now Connected`);
+        DebugSubject_.next(`Connection ${id}, Now Connected`);
         const isOffer = connection.localDescription?.type === "offer";
         if (isOffer) return;
       }
@@ -85,7 +89,7 @@ export class Client {
   };
 
   onTrackHandler = (id: string) => (ev: RTCTrackEvent) => {
-    DebugSubject.next(`ID: ${id}, On Track Handler`);
+    DebugSubject_.next(`ID: ${id}, On Track Handler`);
     const stream = ev.streams[0];
     this.addStream(id, stream);
     this.OnStreamSubject_.next([id, stream]);
@@ -110,7 +114,7 @@ export class Client {
   };
 
   onDataChannelHandler = (id: string) => (ev: RTCDataChannelEvent) => {
-    DebugSubject.next(`ID: ${id}, On Data Channel Handler`);
+    DebugSubject_.next(`ID: ${id}, On Data Channel Handler`);
     const dataChannel = ev.channel;
     if (!dataChannel) return;
     dataChannel.onmessage = this.onDataChannelMessageHandler(id);
@@ -125,6 +129,6 @@ export class Client {
   };
 
   onDataChannelMessageSubjectHandler = (message: [string, string]) => {
-    DebugSubject.next(message);
+    DebugSubject_.next(message);
   };
 }

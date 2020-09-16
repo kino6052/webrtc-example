@@ -22,7 +22,7 @@ describe("Backend Service", () => {
     };
     ChannelService._TVProgramSubject.subscribe(spy);
     BackendService.TVProgramStateSubject_.next(input);
-    expect(spy).toHaveBeenCalledTimes(1);
+    expect(spy).toHaveBeenCalledTimes(2);
     expect(spy).toHaveBeenCalledWith(input);
   });
 });

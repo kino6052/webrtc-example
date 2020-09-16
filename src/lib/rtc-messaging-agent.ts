@@ -1,7 +1,6 @@
 import { Subject } from "rxjs";
 import { filter } from "rxjs/operators";
-import { DebugSubject } from "../utils";
-import { BroadcastingAgent, IMessage } from "./broadcast";
+import { BroadcastingAgent, DebugSubject_, IMessage } from "./broadcast";
 
 export class RTCMessagingAgent {
   // Subjects
@@ -51,7 +50,7 @@ export class RTCMessagingAgent {
   onOfferCreatedHandler = (id: string) => (
     sessionDescription: RTCSessionDescriptionInit
   ) => {
-    DebugSubject.next([
+    DebugSubject_.next([
       `Offer for ${id} Created in ${this.broadcastingAgent.id}`,
       sessionDescription,
     ]);
@@ -80,7 +79,7 @@ export class RTCMessagingAgent {
   onAnswerCreatedHandler = (id: string) => (
     sessionDescription: RTCSessionDescriptionInit
   ) => {
-    DebugSubject.next([
+    DebugSubject_.next([
       `Answer for ${id} Created in ${this.broadcastingAgent.id}`,
       sessionDescription,
     ]);

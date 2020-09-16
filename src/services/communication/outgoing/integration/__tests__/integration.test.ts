@@ -1,27 +1,68 @@
+import {
+  EMessageType,
+  IMessage,
+  IPositionMessage,
+} from "../../../../../shared/definitions";
+import { BackendService } from "../../../../backend/backend";
+import { InitService } from "../../../../init/init";
+import { MediaService } from "../../../../media/media";
+import { UnityService } from "../../../../unity/unity";
 import "../../../index";
+import { RTCService } from "../../../rtc/rtc";
+import { OutgoingMessageService } from "../../outgoing";
 
-describe("", () => {
-  it("outgoing.StartMessagingSubject_ -> init._IsGameLoadedSubject", () => {
-    throw new Error("Not Implemented");
+describe("Outgoing Message Service", () => {
+  it("OutgoingMessageService.StartMessagingSubject_ -> InitService._IsGameLoadedSubject", () => {
+    const spy = jest.fn();
+    const input: IMessage = { type: EMessageType.Start };
+    InitService._IsGameLoadedSubject.subscribe(spy);
+    OutgoingMessageService.StartMessageSubject_.next(input);
+    expect(spy).toHaveBeenCalledTimes(2);
+    expect(spy).toHaveBeenLastCalledWith(true);
   });
 
-  it("outgoing.PresentMessageSubject -> media._ShareScreenMessageSubject", () => {
-    throw new Error("Not Implemented");
+  it("OutgoingMessageService.PresentMessageSubject_ -> MediaService._ShareScreenSubject", () => {
+    const spy = jest.fn();
+    const input = { type: EMessageType.Present };
+    MediaService._ShareScreenSubject.subscribe(spy);
+    OutgoingMessageService.PresentMessageSubject_.next(input);
+    expect(spy).toHaveBeenCalledTimes(1);
   });
 
-  it("outgoing.PresentMessageSubject -> backend._UseTVChannelSubject", () => {
-    throw new Error("Not Implemented");
+  it("OutgoingMessagingService.PresentMessageSubject_ -> BackendService._UseTVChannelSubject", () => {
+    const spy = jest.fn();
+    const input = { type: EMessageType.Present };
+    BackendService._UseTVChannelSubject.subscribe(spy);
+    OutgoingMessageService.PresentMessageSubject_.next(input);
+    expect(spy).toHaveBeenCalledTimes(1);
   });
 
-  it("outgoing.FullScreenMessageSubject -> unity._MakeFullScreenSubject", () => {
-    throw new Error("Not Implemented");
+  it("OutgoingMessageService.FullScreenMessageSubject -> UnityService._MakeFullScreenSubject", () => {
+    const spy = jest.fn();
+    const input = { type: EMessageType.FullScreen };
+    UnityService._MakeFullScreenSubject.subscribe(spy);
+    OutgoingMessageService.FullScreenMessageSubject_.next(input);
+    expect(spy).toHaveBeenCalledTimes(1);
   });
 
-  it("outgoing.PositionMessageSubject_ -> rtc._BroadcastSubject", () => {
-    throw new Error("Not Implemented");
-  });
-
-  it("outgoing.ImageMessageSubject_ -> rtc._BroadcastSubject", () => {
-    throw new Error("Not Implemented");
+  it("OutgoingMessageService.PositionMessageSubject_ -> RTCService._BroadcastSubject", () => {
+    const spy = jest.fn();
+    const input: IPositionMessage = {
+      type: EMessageType.Position,
+      name: "test",
+      position: {
+        isJumping: false,
+        isRunning: false,
+        x: 0,
+        y: 0,
+        yAngle: 0,
+        z: 0,
+      },
+    };
+    RTCService._InitSubject.next();
+    RTCService._BroadcastSubject.subscribe(spy);
+    OutgoingMessageService.PositionMessageSubject_.next(input);
+    expect(spy).toHaveBeenCalledTimes(1);
+    expect(spy).toHaveBeenCalledWith(JSON.stringify(input));
   });
 });
