@@ -47,12 +47,14 @@ const onBroadcastHandler = (message: string) => {
 };
 
 const onMediaHandler = (media: MediaStream | null) => {
+  DebugSubject_.next("RTCService -> onMediaHandler");
   const client = ClientSubject_.getValue();
   if (!client) return;
   client._LocalMediaSubject.next(media);
 };
 
 const onStreamHandler = ([_, stream]: [string, MediaStream]) => {
+  DebugSubject_.next("RTC Service -> onStreamHandler");
   OnStreamSubject_.next(stream);
 };
 

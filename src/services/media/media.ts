@@ -111,6 +111,7 @@ const onShareScreenHandler = () => {
 };
 
 const onAddAudio = (stream: MediaStream) => {
+  DebugSubject_.next("Media Service -> onAddAudio");
   const audio = document.createElement("audio");
   audio.setAttribute("autoplay", "true");
   audio.srcObject = stream;

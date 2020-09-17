@@ -43,6 +43,9 @@ export class Client {
     this.ConnectionManager.OnConnectionCreatedSubject.subscribe(
       this.onConnectionCreatedHandler
     );
+    this._LocalMediaSubject.subscribe(() =>
+      this.DebugSubject_.next("Client -> LocalMediaSubject")
+    );
     this.BroadcastingAgent.sendGreeting();
     this.DebugSubject_.next(["Client", this]);
     this.DebugSubject_.pipe(filter(isDebug)).subscribe((m) =>
