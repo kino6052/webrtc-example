@@ -1,4 +1,5 @@
 import { BackendService } from "../../../backend/backend";
+import { MediaService } from "../../../media/media";
 import { StateService } from "../../../state/state";
 import { IncomingMessageService } from "../../incoming/incoming";
 import { OutgoingMessageService } from "../../outgoing/outgoing";
@@ -24,3 +25,7 @@ RTCService.IDSubject_.subscribe((id) =>
 );
 
 RTCService.IDSubject_.subscribe((id) => StateService._IDSubject_.next(id));
+
+RTCService.OnStreamSubject_.subscribe((stream) =>
+  MediaService._AddAudioSubject.next(stream)
+);

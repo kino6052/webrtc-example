@@ -6,6 +6,7 @@ import { WSService } from "../../../ws/ws";
 import { IMessage } from "../../../../../lib/broadcast";
 import { OutgoingMessageService } from "../../../outgoing/outgoing";
 import { StateService } from "../../../../state/state";
+import { MediaService } from "../../../../media/media";
 
 describe("Incoming Message Service", () => {
   it("RTCService.OnDataChannelMessagingSubject_ -> IncomingMessageService._MessageSubject", () => {
@@ -53,6 +54,14 @@ describe("Incoming Message Service", () => {
     const input = "1";
     StateService._IDSubject_.subscribe(spy);
     RTCService.IDSubject_.next(input);
+    expect(spy).toHaveBeenCalledTimes(1);
+  });
+
+  it("RTCService.OnStreamSubject_ -> MediaService._AddAudioSubject", () => {
+    const spy = jest.fn();
+    const input = {} as MediaStream;
+    MediaService._AddAudioSubject.subscribe(spy);
+    RTCService.OnStreamSubject_.next(input);
     expect(spy).toHaveBeenCalledTimes(1);
   });
 });

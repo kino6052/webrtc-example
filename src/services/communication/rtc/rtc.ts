@@ -20,6 +20,7 @@ const ClientSubject_ = new BehaviorSubject<Client | null>(null);
 const IDSubject_ = new BehaviorSubject<string | null>(null);
 const UpdateStateSubject_ = new Subject();
 const OnDataChannelMessageSubject_ = new Subject<[string, string]>();
+const OnStreamSubject_ = new Subject<MediaStream>();
 const DebugSubject_ = new Subject();
 
 // Methods
@@ -51,6 +52,10 @@ const onMediaHandler = (media: MediaStream | null) => {
   client._LocalMediaSubject.next(media);
 };
 
+const onStreamHandler = ([_, stream]: [string, MediaStream]) => {
+  OnStreamSubject_.next(stream);
+};
+
 // Subscriptions
 _InitSubject.subscribe(init);
 
@@ -63,6 +68,11 @@ ClientSubject_.pipe(
   filter((c) => !!c),
   switchMap((client) => client!.OnDataChannelSubject_)
 ).subscribe(console.warn);
+
+ClientSubject_.pipe(
+  filter((c) => !!c),
+  switchMap((client) => client!.OnStreamSubject_)
+).subscribe(onStreamHandler);
 
 _BroadcastSubject.subscribe(onBroadcastHandler);
 
@@ -97,5 +107,6 @@ export class RTCService {
   static IDSubject_ = IDSubject_;
   static UpdateStateSubject_ = UpdateStateSubject_;
   static OnDataChannelMessageSubject_ = OnDataChannelMessageSubject_;
+  static OnStreamSubject_ = OnStreamSubject_;
   static DebugSubject_ = DebugSubject_;
 }

@@ -11,6 +11,7 @@ const IsInitializedSubject = new BehaviorSubject(false);
 // Input
 const _InitSubject = new Subject();
 const _ShareScreenSubject = new Subject();
+const _AddAudioSubject = new Subject<MediaStream>();
 
 // Output
 const OnRequestAnimationFrame_ = new Subject();
@@ -109,6 +110,12 @@ const onShareScreenHandler = () => {
   getDisplayMedia();
 };
 
+const onAddAudio = (stream: MediaStream) => {
+  const audio = document.createElement("audio");
+  audio.setAttribute("autoplay", "true");
+  audio.srcObject = stream;
+};
+
 const init = () => {
   initializeCanvas();
   step();
@@ -139,20 +146,23 @@ _ShareScreenSubject
   // .pipe(filter(isInitializedFilter), filter(hasNoLocalMediaFilter))
   .subscribe(onShareScreenHandler);
 
-DebugSubject_.pipe(filter(isDebug)).subscribe((m) =>
-  console.warn("Media Service: ", m)
-);
+_AddAudioSubject.subscribe(onAddAudio);
 
 OnRequestAnimationFrame_.pipe(
   filter(() => IsPresentingSubject_.getValue()),
   throttleTime(UPDATE_INTERVAL)
 ).subscribe(update);
 
+DebugSubject_.pipe(filter(isDebug)).subscribe((m) =>
+  console.warn("Media Service: ", m)
+);
+
 // Export
 export class MediaService {
   // Input
   static _InitSubject = _InitSubject;
   static _ShareScreenSubject = _ShareScreenSubject;
+  static _AddAudioSubject = _AddAudioSubject;
 
   // Output
   static IsPresentingSubject_ = IsPresentingSubject_;
