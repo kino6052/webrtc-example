@@ -1,6 +1,7 @@
 import { filter } from "rxjs/internal/operators/filter";
 import { map } from "rxjs/internal/operators/map";
 import { tap } from "rxjs/internal/operators/tap";
+import { buffer } from "rxjs/internal/operators/buffer";
 import { Subject } from "rxjs/internal/Subject";
 import {
   EMessageType,
@@ -16,6 +17,7 @@ import {
 // Input
 const _MessageSubject = new Subject<[string, string]>();
 const _ImageSubject = new Subject<string>();
+const _ProceedSubject = new Subject<string>();
 
 // Output
 const PositionMessageSubject_ = new Subject<IPositionMessage>();
@@ -60,10 +62,7 @@ _MessageSubject
 //   });
 
 _ImageSubject
-  .pipe(
-    tap((image) => console.warn("here", image)),
-    map(imageSubjectHandler)
-  )
+  .pipe(map(imageSubjectHandler))
   .subscribe((m) =>
     ImageDataMessageSubject_.next((m as unknown) as IImageDataMessage)
   );
@@ -73,6 +72,7 @@ export class IncomingMessageService {
   // Input
   static _MessageSubject = _MessageSubject;
   static _ImageSubject = _ImageSubject;
+  static _ProceedSubject = _ProceedSubject;
 
   // Output
   static PositionMessageSubject_ = PositionMessageSubject_;

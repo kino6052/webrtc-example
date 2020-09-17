@@ -3,6 +3,7 @@ import { ChannelService } from "../../../channel/channel";
 import { InitService } from "../../../init/init";
 import { MediaService } from "../../../media/media";
 import { UnityService } from "../../../unity/unity";
+import { IncomingMessageService } from "../../incoming/incoming";
 import { RTCService } from "../../rtc/rtc";
 import { OutgoingMessageService } from "../outgoing";
 
@@ -28,4 +29,8 @@ OutgoingMessageService.FullScreenMessageSubject_.subscribe(() =>
 
 OutgoingMessageService.ProceedMessageSubject_.subscribe(() =>
   ChannelService._ProceedSubject.next()
+);
+
+OutgoingMessageService.PositionMessageSubject_.subscribe(() =>
+  IncomingMessageService._ProceedSubject.next()
 );

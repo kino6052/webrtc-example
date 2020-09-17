@@ -54,6 +54,7 @@ const onMediaHandler = (media: MediaStream | null) => {
 };
 
 const onStreamHandler = ([_, stream]: [string, MediaStream]) => {
+  console.warn("STREAM!");
   DebugSubject_.next("RTC Service -> onStreamHandler");
   OnStreamSubject_.next(stream);
 };

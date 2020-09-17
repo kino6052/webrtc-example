@@ -1,1 +1,1 @@
-import "./integration/outgoing";
+import "./integration/integration";

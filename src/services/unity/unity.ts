@@ -1,11 +1,7 @@
-import { BehaviorSubject } from "rxjs/internal/BehaviorSubject";
-import { filter } from "rxjs/internal/operators/filter";
 import { Subject } from "rxjs/internal/Subject";
-import { IMessage, TTVChannel } from "../../shared/definitions";
+import { IMessage } from "../../shared/definitions";
 
 // Input
-const _CurrentTVChannelStateSubject = new BehaviorSubject<TTVChannel | null>(1);
-const _CanSendMessages = new BehaviorSubject<boolean>(true);
 const _SendMessageToUnitySubject = new Subject<IMessage>();
 const _MakeFullScreenSubject = new Subject();
 const _QuitGameSubject = new Subject();
@@ -52,18 +48,19 @@ const quitGame = () => {
 window.sendUnityMessage = (message: string) =>
   UnityMessageSubject_.next(message);
 
-_SendMessageToUnitySubject.subscribe(sendMessageToUnityHandler);
+// _SendMessageToUnitySubject.subscribe(sendMessageToUnityHandler);
 
 _MakeFullScreenSubject.subscribe(makeFullScreen);
 
 _QuitGameSubject.subscribe(quitGame);
 
+UnityMessageSubject_.subscribe(() => {
+  quitGame();
+});
+
 export class UnityService {
-  static _CurrentTVChannelStateSubject = _CurrentTVChannelStateSubject;
-  static _CanSendMessages = _CanSendMessages;
   static _SendMessageToUnitySubject = _SendMessageToUnitySubject;
   static _MakeFullScreenSubject = _MakeFullScreenSubject;
-  static _QuitGameSubject = _QuitGameSubject;
 
   // Output
   static UnityMessageSubject_ = UnityMessageSubject_;

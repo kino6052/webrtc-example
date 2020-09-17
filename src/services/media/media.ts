@@ -1,6 +1,7 @@
 import { BehaviorSubject } from "rxjs/internal/BehaviorSubject";
 import { combineLatest } from "rxjs/internal/observable/combineLatest";
 import { interval } from "rxjs/internal/observable/interval";
+import { buffer } from "rxjs/internal/operators/buffer";
 import { filter } from "rxjs/internal/operators/filter";
 import { map } from "rxjs/internal/operators/map";
 import { throttleTime } from "rxjs/internal/operators/throttleTime";
@@ -20,17 +21,19 @@ const _VideoSubject = new Subject<MediaStream>();
 
 // Output
 const OnRequestAnimationFrame_ = new Subject();
-const IsPresentingSubject_ = new BehaviorSubject<boolean>(false);
 const MediaSubject_ = new BehaviorSubject<MediaStream | null>(null);
 const IsMediaConfiguredSubject_ = new BehaviorSubject(false);
-const ScreenMediaSubject_ = new BehaviorSubject<MediaStream | null>(null);
 const ImageSubject_ = new Subject<string>();
-const ImageDataMessageSubject_ = new Subject<IImageDataMessage>();
 const DebugSubject_ = new Subject<{}>();
 
 // Auxilary
-const SIZE = 1024;
+const SIZE = 256;
 const video = document.createElement("video");
+video.addEventListener("canplay", () => {
+  video.play();
+});
+const image = document.createElement("img");
+document.querySelector("body")?.appendChild(image);
 let canvas: OffscreenCanvas;
 
 // Methods
@@ -70,12 +73,6 @@ const initializeCanvas = () => {
   }
 };
 
-const streamToImageHandler = (stream: MediaStream) => {
-  if (!canvas) return;
-  video.pause();
-  video.srcObject = stream;
-};
-
 const update = () => {
   if (!canvas) return;
   canvas.getContext("2d")?.drawImage(video, 0, 0, SIZE, SIZE);
@@ -95,25 +92,6 @@ const update = () => {
   });
 };
 
-const onLocalMediaHandler = (stream: MediaStream | null) => {
-  if (!stream) return;
-  IsPresentingSubject_.next(true);
-  streamToImageHandler(stream);
-};
-
-const onImageToImageDataMessageHandler = (image: string) => {
-  const message: IImageDataMessage = {
-    type: EMessageType.ImageData,
-    image,
-  };
-  ImageDataMessageSubject_.next(message);
-};
-
-const onShareScreenHandler = () => {
-  DebugSubject_.next("Init Media");
-  getDisplayMedia();
-};
-
 const hasAudioTracks = (stream: MediaStream) =>
   stream.getAudioTracks().length > 0;
 const hasVideoTracks = (stream: MediaStream) =>
@@ -128,20 +106,22 @@ const onAddAudio = (stream: MediaStream) => {
 };
 
 const onAddVideo = (stream: MediaStream) => {
+  console.warn("onAddVideo");
   if (!hasVideoTracks(stream)) return;
   DebugSubject_.next("Media Service -> onAddVideo");
   video.srcObject = stream;
 };
 
 const init = () => {
+  IsInitializedSubject.next(true);
   initializeCanvas();
   step();
-  IsInitializedSubject.next(true);
 };
 
 const isInitializedFilter = () => IsInitializedSubject.getValue();
 
 const step = () => {
+  update();
   OnRequestAnimationFrame_.next();
   requestAnimationFrame(step);
 };
@@ -171,24 +151,18 @@ combineLatest([IsVideoConfiguredSubject, IsAudioConfiguredSubject])
 
 _InitSubject.subscribe(init);
 
-ImageSubject_.pipe(filter(isInitializedFilter)).subscribe(
-  onImageToImageDataMessageHandler
-);
-
-// ScreenMediaSubject_.pipe(filter(isInitializedFilter)).subscribe(
-//   onLocalMediaHandler
-// );
-
-// TODO: Remove This (This was deprecated due to unnecessity of Present Button);
-// _ShareScreenSubject
-//   // .pipe(filter(isInitializedFilter), filter(hasNoLocalMediaFilter))
-//   .subscribe(onShareScreenHandler);
-
 _AudioSubject.subscribe(onAddAudio);
 
 _VideoSubject.subscribe(onAddVideo);
 
-OnRequestAnimationFrame_.pipe(throttleTime(UPDATE_INTERVAL)).subscribe(update);
+ImageSubject_.pipe(
+  buffer(OnRequestAnimationFrame_.pipe(throttleTime(60))),
+  filter((i) => !!i),
+  map((i) => i[i.length - 1]),
+  filter((i) => !!i)
+).subscribe((i) => {
+  image.src = "data:image/jpeg;base64," + i;
+});
 
 DebugSubject_.pipe(filter(isDebug)).subscribe((m) =>
   console.warn("Media Service: ", m)
@@ -204,10 +178,7 @@ export class MediaService {
 
   // Output
   static ImageSubject_ = ImageSubject_;
-  static IsPresentingSubject_ = IsPresentingSubject_;
   static IsMediaConfiguredSubject_ = IsMediaConfiguredSubject_;
   static MediaSubject_ = MediaSubject_;
-  static ScreenMediaSubject_ = ScreenMediaSubject_;
-  static ImageDataMessageSubject_ = ImageDataMessageSubject_;
   static DebugSubject_ = DebugSubject_;
 }
