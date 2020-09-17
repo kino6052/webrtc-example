@@ -89,7 +89,10 @@ ClientSubject_.pipe(
   switchMap((client) => client!.DebugSubject_)
 ).subscribe((m) => DebugSubject_.next(m));
 
-_MediaSubject.subscribe(onMediaHandler);
+ClientSubject_.pipe(
+  filter((c) => !!c),
+  switchMap(() => _MediaSubject)
+).subscribe(onMediaHandler);
 
 DebugSubject_.pipe(filter(isDebug)).subscribe((m) =>
   console.warn("RTC Service: ", m)
