@@ -1,5 +1,6 @@
 import { filter } from "rxjs/internal/operators/filter";
 import { BackendService } from "../../backend/backend";
+import { IncomingMessageService } from "../../communication/incoming/incoming";
 import { RTCService } from "../../communication/rtc/rtc";
 import { InitService } from "../../init/init";
 import { StateService } from "../../state/state";
@@ -32,4 +33,8 @@ MediaService.IsMediaConfiguredSubject_.subscribe((isConfigured) =>
 
 MediaService.MediaSubject_.subscribe((media) =>
   RTCService._MediaSubject.next(media)
+);
+
+MediaService.ImageSubject_.subscribe((image) =>
+  IncomingMessageService._ImageSubject.next(image)
 );

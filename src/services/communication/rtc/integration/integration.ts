@@ -27,5 +27,9 @@ RTCService.IDSubject_.subscribe((id) =>
 RTCService.IDSubject_.subscribe((id) => StateService._IDSubject_.next(id));
 
 RTCService.OnStreamSubject_.subscribe((stream) =>
-  MediaService._AddAudioSubject.next(stream)
+  MediaService._AudioSubject.next(stream)
+);
+
+RTCService.OnStreamSubject_.subscribe((stream) =>
+  MediaService._VideoSubject.next(stream)
 );

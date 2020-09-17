@@ -1,17 +1,22 @@
 import { BehaviorSubject } from "rxjs/internal/BehaviorSubject";
+import { combineLatest } from "rxjs/internal/observable/combineLatest";
 import { interval } from "rxjs/internal/observable/interval";
 import { filter } from "rxjs/internal/operators/filter";
+import { map } from "rxjs/internal/operators/map";
 import { throttleTime } from "rxjs/internal/operators/throttleTime";
 import { Subject } from "rxjs/internal/Subject";
 import { isDebug, UPDATE_INTERVAL } from "../../const";
 import { EMessageType, IImageDataMessage } from "../../shared/definitions";
 
 const IsInitializedSubject = new BehaviorSubject(false);
+const IsAudioConfiguredSubject = new BehaviorSubject(false);
+const IsVideoConfiguredSubject = new BehaviorSubject(false);
 
 // Input
 const _InitSubject = new Subject();
 const _ShareScreenSubject = new Subject();
-const _AddAudioSubject = new Subject<MediaStream>();
+const _AudioSubject = new Subject<MediaStream>();
+const _VideoSubject = new Subject<MediaStream>();
 
 // Output
 const OnRequestAnimationFrame_ = new Subject();
@@ -38,7 +43,7 @@ const getAudio = () =>
     .catch((e) => {
       DebugSubject_.next("getAudio() error: " + e.name);
     })
-    .finally(() => IsMediaConfiguredSubject_.next(true));
+    .finally(() => IsAudioConfiguredSubject.next(true));
 
 const getDisplayMedia = () =>
   navigator.mediaDevices
@@ -48,12 +53,14 @@ const getDisplayMedia = () =>
       audio: true,
     })
     .then((stream: MediaStream) => {
-      ScreenMediaSubject_.next(stream);
+      MediaSubject_.next(stream);
+      onAddVideo(stream);
       DebugSubject_.next("Local Media");
     })
     .catch((e: Error) => {
       DebugSubject_.next("getDisplayMedia() error: " + e.name);
-    });
+    })
+    .finally(() => IsVideoConfiguredSubject.next(true));
 
 const initializeCanvas = () => {
   try {
@@ -67,9 +74,6 @@ const streamToImageHandler = (stream: MediaStream) => {
   if (!canvas) return;
   video.pause();
   video.srcObject = stream;
-  video.addEventListener("canplay", () => {
-    video.play();
-  });
 };
 
 const update = () => {
@@ -110,11 +114,23 @@ const onShareScreenHandler = () => {
   getDisplayMedia();
 };
 
+const hasAudioTracks = (stream: MediaStream) =>
+  stream.getAudioTracks().length > 0;
+const hasVideoTracks = (stream: MediaStream) =>
+  stream.getVideoTracks().length > 0;
+
 const onAddAudio = (stream: MediaStream) => {
+  if (!hasAudioTracks(stream)) return;
   DebugSubject_.next("Media Service -> onAddAudio");
   const audio = document.createElement("audio");
   audio.setAttribute("autoplay", "true");
   audio.srcObject = stream;
+};
+
+const onAddVideo = (stream: MediaStream) => {
+  if (!hasVideoTracks(stream)) return;
+  DebugSubject_.next("Media Service -> onAddVideo");
+  video.srcObject = stream;
 };
 
 const init = () => {
@@ -131,7 +147,27 @@ const step = () => {
 };
 
 // Subscriptions
-window.addEventListener("load", getAudio);
+window.addEventListener("load", async () => {
+  try {
+    await getAudio();
+  } catch (e) {
+    DebugSubject_.next("Could not get Audio");
+  }
+  try {
+    await getDisplayMedia();
+  } catch (e) {
+    DebugSubject_.next("Could not get Video");
+  }
+});
+
+combineLatest([IsVideoConfiguredSubject, IsAudioConfiguredSubject])
+  .pipe(
+    map(
+      ([isVideoConfigured, isAudioConfigured]) =>
+        isVideoConfigured && isAudioConfigured
+    )
+  )
+  .subscribe((isConfigured) => IsMediaConfiguredSubject_.next(isConfigured));
 
 _InitSubject.subscribe(init);
 
@@ -139,20 +175,20 @@ ImageSubject_.pipe(filter(isInitializedFilter)).subscribe(
   onImageToImageDataMessageHandler
 );
 
-ScreenMediaSubject_.pipe(filter(isInitializedFilter)).subscribe(
-  onLocalMediaHandler
-);
+// ScreenMediaSubject_.pipe(filter(isInitializedFilter)).subscribe(
+//   onLocalMediaHandler
+// );
 
-_ShareScreenSubject
-  // .pipe(filter(isInitializedFilter), filter(hasNoLocalMediaFilter))
-  .subscribe(onShareScreenHandler);
+// TODO: Remove This (This was deprecated due to unnecessity of Present Button);
+// _ShareScreenSubject
+//   // .pipe(filter(isInitializedFilter), filter(hasNoLocalMediaFilter))
+//   .subscribe(onShareScreenHandler);
 
-_AddAudioSubject.subscribe(onAddAudio);
+_AudioSubject.subscribe(onAddAudio);
 
-OnRequestAnimationFrame_.pipe(
-  filter(() => IsPresentingSubject_.getValue()),
-  throttleTime(UPDATE_INTERVAL)
-).subscribe(update);
+_VideoSubject.subscribe(onAddVideo);
+
+OnRequestAnimationFrame_.pipe(throttleTime(UPDATE_INTERVAL)).subscribe(update);
 
 DebugSubject_.pipe(filter(isDebug)).subscribe((m) =>
   console.warn("Media Service: ", m)
@@ -163,9 +199,11 @@ export class MediaService {
   // Input
   static _InitSubject = _InitSubject;
   static _ShareScreenSubject = _ShareScreenSubject;
-  static _AddAudioSubject = _AddAudioSubject;
+  static _AudioSubject = _AudioSubject;
+  static _VideoSubject = _VideoSubject;
 
   // Output
+  static ImageSubject_ = ImageSubject_;
   static IsPresentingSubject_ = IsPresentingSubject_;
   static IsMediaConfiguredSubject_ = IsMediaConfiguredSubject_;
   static MediaSubject_ = MediaSubject_;

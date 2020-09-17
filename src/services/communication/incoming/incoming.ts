@@ -1,5 +1,6 @@
 import { filter } from "rxjs/internal/operators/filter";
 import { map } from "rxjs/internal/operators/map";
+import { tap } from "rxjs/internal/operators/tap";
 import { Subject } from "rxjs/internal/Subject";
 import {
   EMessageType,
@@ -18,7 +19,7 @@ const _ImageSubject = new Subject<string>();
 
 // Output
 const PositionMessageSubject_ = new Subject<IPositionMessage>();
-const ImageDataMessageSubject_ = new Subject<[string, IImageDataMessage]>();
+const ImageDataMessageSubject_ = new Subject<IImageDataMessage>();
 const DebugSubject_ = new Subject<{}>();
 
 // Methods
@@ -51,12 +52,21 @@ _MessageSubject
     PositionMessageSubject_.next((m as unknown) as IPositionMessage)
   );
 
-_MessageSubject
-  .pipe(map(handleIncomingMessage), filter(imageMessageFilter))
-  .subscribe((m) => {
-    if (!m) return;
-    ImageDataMessageSubject_.next([m.id, (m as unknown) as IImageDataMessage]);
-  });
+// _MessageSubject
+//   .pipe(map(handleIncomingMessage), filter(imageMessageFilter))
+//   .subscribe((m) => {
+//     if (!m) return;
+//     ImageDataMessageSubject_.next([m.id, (m as unknown) as IImageDataMessage]);
+//   });
+
+_ImageSubject
+  .pipe(
+    tap((image) => console.warn("here", image)),
+    map(imageSubjectHandler)
+  )
+  .subscribe((m) =>
+    ImageDataMessageSubject_.next((m as unknown) as IImageDataMessage)
+  );
 
 // Export
 export class IncomingMessageService {

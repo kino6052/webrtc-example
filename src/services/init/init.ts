@@ -1,6 +1,7 @@
 import { BehaviorSubject } from "rxjs/internal/BehaviorSubject";
 import { combineLatest } from "rxjs/internal/observable/combineLatest";
 import { filter } from "rxjs/internal/operators/filter";
+import { takeUntil } from "rxjs/internal/operators/takeUntil";
 import { Subject } from "rxjs/internal/Subject";
 import { isDebug } from "../../const";
 
@@ -44,6 +45,7 @@ combineLatest([
   _IsMediaConfiguredSubject,
 ])
   .pipe(
+    takeUntil(InitSubject_),
     filter(
       ([
         isWindowLoadedSubject,

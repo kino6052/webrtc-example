@@ -29,15 +29,15 @@ describe("Incoming -> Unity", () => {
     expect(spy).toHaveBeenCalledWith(input);
   });
 
-  it("IncomingMessageService.ImageDataMessageSubject_ -> ChannelService._ImageDataMessageSubject", () => {
-    const spy = jest.fn();
-    const input = ["test", { type: EMessageType.ImageData, image: "" }] as [
-      string,
-      IImageDataMessage
-    ];
-    ChannelService._ImageDataMessageSubject.subscribe(spy);
-    IncomingMessageService.ImageDataMessageSubject_.next(input);
-    expect(spy).toHaveBeenCalledTimes(1);
-    expect(spy).toHaveBeenCalledWith(input);
-  });
+  // it("IncomingMessageService.ImageDataMessageSubject_ -> ChannelService._ImageDataMessageSubject", () => {
+  //   const spy = jest.fn();
+  //   const input = ["test", { type: EMessageType.ImageData, image: "" }] as [
+  //     string,
+  //     IImageDataMessage
+  //   ];
+  //   ChannelService._ImageDataMessageSubject.subscribe(spy);
+  //   IncomingMessageService.ImageDataMessageSubject_.next(input);
+  //   expect(spy).toHaveBeenCalledTimes(1);
+  //   expect(spy).toHaveBeenCalledWith(input);
+  // });
 });

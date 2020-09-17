@@ -60,7 +60,7 @@ describe("Incoming Message Service", () => {
   it("RTCService.OnStreamSubject_ -> MediaService._AddAudioSubject", () => {
     const spy = jest.fn();
     const input = {} as MediaStream;
-    MediaService._AddAudioSubject.subscribe(spy);
+    MediaService._AudioSubject.subscribe(spy);
     RTCService.OnStreamSubject_.next(input);
     expect(spy).toHaveBeenCalledTimes(1);
   });

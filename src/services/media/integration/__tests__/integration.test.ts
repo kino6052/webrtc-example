@@ -1,5 +1,6 @@
 import { EMessageType } from "../../../../shared/definitions";
 import { BackendService } from "../../../backend/backend";
+import { IncomingMessageService } from "../../../communication/incoming/incoming";
 import { RTCService } from "../../../communication/rtc/rtc";
 import { InitService } from "../../../init/init";
 import { StateService } from "../../../state/state";
@@ -69,5 +70,12 @@ describe("Media Service", () => {
     MediaService.IsMediaConfiguredSubject_.next(true);
     expect(spy).toHaveBeenCalledTimes(3);
     expect(spy).toHaveBeenCalledWith(false);
+  });
+
+  it("MediaService.ImageSubject -> IncomingMessageService._ImageSubject", () => {
+    const spy = jest.fn();
+    IncomingMessageService._ImageSubject.subscribe(spy);
+    MediaService.ImageSubject_.next("");
+    expect(spy).toHaveBeenCalledTimes(1);
   });
 });

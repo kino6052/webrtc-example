@@ -1,5 +1,7 @@
 import { BehaviorSubject } from "rxjs/internal/BehaviorSubject";
 import { filter } from "rxjs/internal/operators/filter";
+import { switchMap } from "rxjs/internal/operators/switchMap";
+import { takeUntil } from "rxjs/internal/operators/takeUntil";
 import { Subject } from "rxjs/internal/Subject";
 import { isDebug } from "../const";
 import { IMessage } from "./broadcast";
@@ -22,31 +24,39 @@ export class WebSocketsAgent {
   ) {
     const url = this.getURL();
     this.ws = new WebSocket(url);
-    this.ws.onmessage = this.onMessageHandler;
-    this.ws.onopen = this.onOpenHandler;
-    this.ws.onclose = this.onCloseHandler;
-    this.ws.onerror = this.onErrorHandler;
-    this.IsWebSocketReadySubject.pipe(filter((isReady) => isReady)).subscribe(
-      this.onIsWebSocketReadyHandler
-    );
+    this.ws.addEventListener("message", this.onMessageHandler);
+    this.ws.addEventListener("open", this.onOpenHandler);
+    this.ws.addEventListener("close", this.onCloseHandler);
+    this.ws.addEventListener("error", this.onErrorHandler);
+    this.IsWebSocketReadySubject.pipe(
+      filter((isReady) => isReady),
+      switchMap(() => this.getCommunicationSubject())
+    ).subscribe(this.onIsWebSocketReadyHandler);
     this.DebugSubject_.pipe(filter(isDebug)).subscribe((m) =>
       console.warn("WebSockets Agent: ", m)
     );
   }
 
-  onIsWebSocketReadyHandler = () => {
-    this._CommunicationSubject
-      .pipe(
-        filter(() => {
-          const _canSend = this.canSend;
-          if (!this.canSend) this.canSend = true;
-          return _canSend;
-        })
-      )
-      .subscribe((message) => {
-        this.sendMessage(JSON.stringify(message));
-      });
+  public close = () => {
+    this.ws.removeEventListener("message", this.onMessageHandler);
+    this.ws.removeEventListener("open", this.onOpenHandler);
+    this.ws.removeEventListener("close", this.onCloseHandler);
+    this.ws.removeEventListener("error", this.onErrorHandler);
   };
+
+  onIsWebSocketReadyHandler = (message: IMessage<unknown>) => {
+    this.sendMessage(JSON.stringify(message));
+  };
+
+  getCommunicationSubject = () =>
+    this._CommunicationSubject.pipe(
+      takeUntil(this.OnCloseSubject),
+      filter(() => {
+        const _canSend = this.canSend;
+        if (!this.canSend) this.canSend = true;
+        return _canSend;
+      })
+    );
 
   getURL = () => {
     let origin = window.location.origin;
@@ -63,7 +73,8 @@ export class WebSocketsAgent {
 
   onErrorHandler = (event: Event) => {
     console.error("WS Error: ", event);
-    if (!this.ws.OPEN) this.OnCloseSubject.next();
+    if (this.ws.OPEN) return;
+    this.onCloseHandler();
   };
 
   onOpenHandler = () => {

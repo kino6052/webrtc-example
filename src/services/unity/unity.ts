@@ -52,9 +52,7 @@ const quitGame = () => {
 window.sendUnityMessage = (message: string) =>
   UnityMessageSubject_.next(message);
 
-_SendMessageToUnitySubject
-  .pipe(filter(() => _CanSendMessages.getValue()))
-  .subscribe(sendMessageToUnityHandler);
+_SendMessageToUnitySubject.subscribe(sendMessageToUnityHandler);
 
 _MakeFullScreenSubject.subscribe(makeFullScreen);
 
