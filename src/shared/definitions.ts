@@ -6,10 +6,16 @@ export enum EMessageType {
   ImageData = "image",
   Start = "start",
   Proceed = "proceed",
+  Leap = "leap",
 }
 
 export interface IMessage {
   type: EMessageType;
+}
+
+export interface ILeapMessage extends IMessage {
+  palmPosition: [number, number, number];
+  direction: [number, number, number];
 }
 
 export interface IPositionMessage extends IMessage {

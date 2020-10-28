@@ -8,8 +8,6 @@ import { ConnectionManager } from "./connection-manager";
 import { RTCMessagingAgent } from "./rtc-messaging-agent";
 
 export class Client {
-  static createClient = (subject: Subject<IMessage<unknown>>) =>
-    new Client(subject);
   public id = generateId(4, 4);
 
   // Channels
@@ -43,9 +41,11 @@ export class Client {
     this.ConnectionManager.OnConnectionCreatedSubject.subscribe(
       this.onConnectionCreatedHandler
     );
-    this._LocalMediaSubject.subscribe(() =>
-      this.DebugSubject_.next("Client -> LocalMediaSubject")
-    );
+    this._LocalMediaSubject.subscribe((stream) => {
+      this.DebugSubject_.next("Client -> LocalMediaSubject");
+      if (!stream) return;
+      this.replaceStream(stream);
+    });
     this.BroadcastingAgent.sendGreeting();
     this.DebugSubject_.next(["Client", this]);
     this.DebugSubject_.pipe(filter(isDebug)).subscribe((m) =>
@@ -54,17 +54,13 @@ export class Client {
   }
 
   // Connection
-
   onConnectionCreatedHandler = (message: [string, RTCPeerConnection]) => {
     const [id, connection] = message;
     connection.ondatachannel = this.onDataChannelHandler(id);
     connection.ontrack = this.onTrackHandler(id);
 
     this.addDataChannelToConnection(id, connection);
-
-    const stream = this._LocalMediaSubject.getValue();
-    if (!stream) return;
-    this.addStreamToConnection(stream, connection);
+    this.addStreamToConnection(this.createStream(), connection);
   };
 
   onConnected = (id: string, connection: RTCPeerConnection) => {
@@ -78,6 +74,35 @@ export class Client {
   };
 
   // Stream
+  createStream = () => {
+    const canvas = document.createElement("canvas");
+    // @ts-ignore
+    const canvasStream = canvas.captureStream();
+    const videoTrack = (canvasStream as MediaStream).getVideoTracks()[0];
+    const audioStream = new AudioContext().createMediaStreamDestination()
+      .stream;
+    const audioTrack = audioStream.getAudioTracks()[0];
+    const stream = new MediaStream();
+    stream.addTrack(videoTrack);
+    stream.addTrack(audioTrack);
+    return stream;
+  };
+
+  replaceStream = (stream: MediaStream) => {
+    const connections = this.ConnectionManager.connections;
+    const tracks = stream.getTracks();
+    for (let id in connections) {
+      const senders = connections[id].getSenders();
+      for (let sender of senders) {
+        for (let track of tracks) {
+          if (track.kind === sender.track?.kind) {
+            sender.replaceTrack(track);
+          }
+        }
+      }
+    }
+  };
+
   onLocalStreamHandler = (stream: MediaStream) => {
     const connections = this.ConnectionManager.connections;
     for (let id in connections) {

@@ -1,76 +1,101 @@
-import { WebSocketsAgent } from "../../../lib/web-sockets-agent";
-import { IMessage } from "../../../lib/broadcast";
-import { switchMap } from "rxjs/internal/operators/switchMap";
-import { Subject } from "rxjs/internal/Subject";
 import { BehaviorSubject } from "rxjs/internal/BehaviorSubject";
 import { filter } from "rxjs/internal/operators/filter";
-import { combineLatest } from "rxjs/internal/observable/combineLatest";
+import { switchMap } from "rxjs/internal/operators/switchMap";
+import { Subject } from "rxjs/internal/Subject";
+import { container, injectable } from "tsyringe";
 import { isDebug } from "../../../const";
+import { IMessage } from "../../../lib/broadcast";
+import { WebSocketsAgent } from "../../../lib/web-sockets-agent";
 
-// Input
-const _CommunicationSubject = new Subject<IMessage<unknown>>();
-const _IsWindowLoadedSubject = new Subject();
-const _IsRemoteSubject = new BehaviorSubject<boolean>(false);
+export interface IWebSocketService {
+  _CommunicationSubject: Subject<IMessage<unknown>>;
+  _IsWindowLoadedSubject: Subject<unknown>;
+  _IsRemoteSubject: BehaviorSubject<boolean>;
+  CommunicationSubject_: Subject<IMessage<unknown>>;
+  WebSocketsAgentSubject_: BehaviorSubject<WebSocketsAgent | null>;
+  ResetAgentSubject_: Subject<unknown>;
+  IsWebSocketConnectionOpen_: BehaviorSubject<boolean>;
+  DebugSubject_: Subject<unknown>;
+}
 
-// Output
-const CommunicationSubject_ = new Subject<IMessage<unknown>>();
-const WebSocketsAgentSubject_ = new BehaviorSubject<WebSocketsAgent | null>(
-  null
-);
-const ResetAgentSubject_ = new Subject();
-const IsWebSocketConnectionOpen_ = new BehaviorSubject(false);
-const DebugSubject_ = new Subject();
-
-// Methods
-const init = () => {
-  // TODO: Add Handler to Refresh WS in WebSocketAgent
-  const ws = new WebSocketsAgent(_CommunicationSubject, CommunicationSubject_);
-  WebSocketsAgentSubject_.next(ws);
-};
-
-const onWebSocketReadyHandler = (isReady: boolean) => {
-  DebugSubject_.next("WS Ready");
-  IsWebSocketConnectionOpen_.next(isReady);
-};
-
-const onWebSocketCloseHandler = () => {
-  DebugSubject_.next("WS Closed");
-  ResetAgentSubject_.next();
-};
-
-// Subscriptions
-window.addEventListener("load", () => _IsWindowLoadedSubject.next());
-
-_IsWindowLoadedSubject.subscribe(init);
-
-ResetAgentSubject_.subscribe(init);
-
-WebSocketsAgentSubject_.pipe(
-  filter((ws) => !!ws),
-  switchMap((ws) => ws!.IsWebSocketReadySubject)
-).subscribe(onWebSocketReadyHandler);
-
-WebSocketsAgentSubject_.pipe(
-  filter((ws) => !!ws),
-  switchMap((ws) => ws!.OnCloseSubject)
-).subscribe(onWebSocketCloseHandler);
-
-_CommunicationSubject.subscribe((m) => DebugSubject_.next(m));
-
-DebugSubject_.pipe(filter(isDebug)).subscribe((m) =>
-  console.warn("WS Service: ", m)
-);
-
-// Exports
-export class WSService {
-  //Input
-  static _CommunicationSubject = _CommunicationSubject;
-  static _IsWindowLoadedSubject = _IsWindowLoadedSubject;
-  static _IsRemoteSubject = _IsRemoteSubject;
+@injectable()
+export class WebSocketService implements IWebSocketService {
+  // Input
+  public _CommunicationSubject = new Subject<IMessage<unknown>>();
+  public _IsWindowLoadedSubject = new Subject();
+  public _IsRemoteSubject = new BehaviorSubject<boolean>(false);
 
   // Output
-  static CommunicationSubject_ = CommunicationSubject_;
-  static WebSocketsAgentSubject_ = WebSocketsAgentSubject_;
-  static ResetAgentSubject_ = ResetAgentSubject_;
-  static IsWebSocketConnectionOpen_ = IsWebSocketConnectionOpen_;
+  public CommunicationSubject_ = new Subject<IMessage<unknown>>();
+  public WebSocketsAgentSubject_ = new BehaviorSubject<WebSocketsAgent | null>(
+    null
+  );
+  public ResetAgentSubject_ = new Subject();
+  public IsWebSocketConnectionOpen_ = new BehaviorSubject(false);
+  public DebugSubject_ = new Subject();
+
+  constructor(url: string) {
+    window.addEventListener("load", () => this._IsWindowLoadedSubject.next());
+
+    // Initialization
+    this._IsWindowLoadedSubject.subscribe(() => this.init(url));
+    this.ResetAgentSubject_.subscribe(() => this.init(url));
+
+    this.WebSocketsAgentSubject_.pipe(
+      filter((ws) => !!ws),
+      switchMap((ws) => ws!.IsWebSocketReadySubject)
+    ).subscribe(this.onWebSocketReadyHandler);
+
+    this.WebSocketsAgentSubject_.pipe(
+      filter((ws) => !!ws),
+      switchMap((ws) => ws!.OnCloseSubject)
+    ).subscribe(this.onWebSocketCloseHandler);
+
+    this._CommunicationSubject.subscribe((m) => this.DebugSubject_.next(m));
+
+    this.DebugSubject_.pipe(filter(isDebug)).subscribe((m) =>
+      console.warn("WS Service: ", m)
+    );
+  }
+
+  // Methods
+  init = (url: string) => {
+    // TODO: Add Handler to Refresh WS in WebSocketAgent
+    const ws = new WebSocketsAgent(
+      url,
+      this._CommunicationSubject,
+      this.CommunicationSubject_
+    );
+    this.WebSocketsAgentSubject_.next(ws);
+  };
+
+  onWebSocketReadyHandler = (isReady: boolean) => {
+    this.DebugSubject_.next("WS Ready");
+    this.IsWebSocketConnectionOpen_.next(isReady);
+  };
+
+  onWebSocketCloseHandler = () => {
+    this.DebugSubject_.next("WS Closed");
+    this.ResetAgentSubject_.next();
+  };
 }
+
+export class MockWebSocketService implements IWebSocketService {
+  // Input
+  public _CommunicationSubject = new Subject<IMessage<unknown>>();
+  public _IsWindowLoadedSubject = new Subject();
+  public _IsRemoteSubject = new BehaviorSubject<boolean>(false);
+
+  // Output
+  public CommunicationSubject_ = new Subject<IMessage<unknown>>();
+  public WebSocketsAgentSubject_ = new BehaviorSubject<WebSocketsAgent | null>(
+    null
+  );
+  public ResetAgentSubject_ = new Subject();
+  public IsWebSocketConnectionOpen_ = new BehaviorSubject(false);
+  public DebugSubject_ = new Subject();
+}
+
+container.register("WebSocketService", {
+  useFactory: () => new WebSocketService(WebSocketsAgent.getURL()),
+});

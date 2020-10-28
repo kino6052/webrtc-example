@@ -15,38 +15,9 @@ let port = process.env.PORT || PORT;
 
 app.use(express.static("./"));
 
-const tvProgram = {};
-const names = {};
-
 app.use((req, res, next) => {
   DebugSubject.next(req.body);
   next();
-});
-
-app.get("/tv", (req, res) => {
-  res.send(tvProgram);
-});
-
-app.post("/tv", (req, res) => {
-  const body = req.body;
-  if (!body) return;
-  const { id, channel } = body;
-  tvProgram[channel] = id;
-  broadcast(JSON.stringify({ message: "tv" }));
-  res.send();
-});
-
-app.get("/name", (req, res) => {
-  res.send(names);
-});
-
-app.post("/name", (req, res) => {
-  const body = req.body;
-  if (!body) return;
-  const { id, name } = body;
-  tvProgram[id] = name;
-  broadcast(JSON.stringify({ message: "name" }));
-  res.send();
 });
 
 app.set("port", port);

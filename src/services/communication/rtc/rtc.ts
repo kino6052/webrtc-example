@@ -3,115 +3,137 @@ import { debounceTime } from "rxjs/internal/operators/debounceTime";
 import { filter } from "rxjs/internal/operators/filter";
 import { switchMap } from "rxjs/internal/operators/switchMap";
 import { Subject } from "rxjs/internal/Subject";
-import { isDebug } from "../../../const";
+import { container } from "tsyringe";
+import singleton from "tsyringe/dist/typings/decorators/singleton";
+import { isDebug, isTest } from "../../../const";
 import { IMessage } from "../../../lib/broadcast";
 import { Client } from "../../../lib/client";
 
-// Input
-const _InitSubject = new Subject();
-const _IsInitializedSubject = new BehaviorSubject<boolean>(false);
-const _BroadcastSubject = new Subject<string>();
-const _CommunicationSubject = new Subject<IMessage<unknown>>();
-const _MediaSubject = new BehaviorSubject<MediaStream | null>(null);
+export interface IRTCService {
+  _InitSubject: Subject<unknown>;
+  _BroadcastSubject: Subject<string>;
+  _CommunicationSubject: Subject<IMessage<unknown>>;
+  _MediaSubject: Subject<MediaStream>;
+  CommunicationSubject_: Subject<IMessage<unknown>>;
+  ClientSubject_: BehaviorSubject<Client | null>;
+  IDSubject_: BehaviorSubject<string | null>;
+  UpdateStateSubject_: Subject<unknown>;
+  OnDataChannelMessageSubject_: Subject<[string, string]>;
+  OnStreamSubject_: Subject<MediaStream>;
+  DebugSubject_: Subject<unknown>;
+}
 
-// Output
-const CommunicationSubject_ = new Subject<IMessage<unknown>>();
-const ClientSubject_ = new BehaviorSubject<Client | null>(null);
-const IDSubject_ = new BehaviorSubject<string | null>(null);
-const UpdateStateSubject_ = new Subject();
-const OnDataChannelMessageSubject_ = new Subject<[string, string]>();
-const OnStreamSubject_ = new Subject<MediaStream>();
-const DebugSubject_ = new Subject();
-
-// Methods
-const init = () => {
-  const client = Client.createClient(CommunicationSubject_);
-  ClientSubject_.next(client);
-  _IsInitializedSubject.next(true);
-  // DebugSubject_.next("Remote");
-  IDSubject_.next(client.id);
-};
-
-const isInitializedFilter = () => _IsInitializedSubject.getValue();
-
-const onDataChannelHandler = (m: [string, string]) => {
-  DebugSubject_.next(m);
-  OnDataChannelMessageSubject_.next(m);
-};
-
-const onBroadcastHandler = (message: string) => {
-  // DebugSubject_.next(message);
-  const client = ClientSubject_.getValue();
-  if (!client) return;
-  client.broadcastData(message);
-};
-
-const onMediaHandler = (media: MediaStream | null) => {
-  DebugSubject_.next("RTCService -> onMediaHandler");
-  const client = ClientSubject_.getValue();
-  if (!client) return;
-  client._LocalMediaSubject.next(media);
-};
-
-const onStreamHandler = ([_, stream]: [string, MediaStream]) => {
-  DebugSubject_.next("RTC Service -> onStreamHandler");
-  OnStreamSubject_.next(stream);
-};
-
-// Subscriptions
-_InitSubject.subscribe(init);
-
-ClientSubject_.pipe(
-  filter((c) => !!c),
-  switchMap((client) => client!.OnDataChannelMessageSubject_)
-).subscribe(onDataChannelHandler);
-
-ClientSubject_.pipe(
-  filter((c) => !!c),
-  switchMap((client) => client!.OnDataChannelSubject_)
-).subscribe(console.warn);
-
-ClientSubject_.pipe(
-  filter((c) => !!c),
-  switchMap((client) => client!.OnStreamSubject_)
-).subscribe(onStreamHandler);
-
-_BroadcastSubject.subscribe(onBroadcastHandler);
-
-_CommunicationSubject.subscribe((m) => CommunicationSubject_.next(m));
-
-CommunicationSubject_.pipe(debounceTime(100)).subscribe(() =>
-  UpdateStateSubject_.next()
-);
-
-ClientSubject_.pipe(
-  filter((c) => !!c),
-  switchMap((client) => client!.DebugSubject_)
-).subscribe((m) => DebugSubject_.next(m));
-
-ClientSubject_.pipe(
-  filter((c) => !!c),
-  switchMap(() => _MediaSubject)
-).subscribe(onMediaHandler);
-
-DebugSubject_.pipe(filter(isDebug)).subscribe((m) =>
-  console.warn("RTC Service: ", m)
-);
-
-// Exports
-export class RTCService {
-  static _InitSubject = _InitSubject;
-  static _IsInitializedSubject = _IsInitializedSubject;
-  static _BroadcastSubject = _BroadcastSubject;
-  static _CommunicationSubject = _CommunicationSubject;
-  static _MediaSubject = _MediaSubject;
+@singleton()
+class RTCService implements IRTCService {
+  // Input
+  _InitSubject = new Subject();
+  _BroadcastSubject = new Subject<string>();
+  _CommunicationSubject = new Subject<IMessage<unknown>>();
+  _MediaSubject = new Subject<MediaStream>();
 
   // Output
-  static CommunicationSubject_ = CommunicationSubject_;
-  static ClientSubject_ = ClientSubject_;
-  static IDSubject_ = IDSubject_;
-  static UpdateStateSubject_ = UpdateStateSubject_;
-  static OnDataChannelMessageSubject_ = OnDataChannelMessageSubject_;
-  static OnStreamSubject_ = OnStreamSubject_;
-  static DebugSubject_ = DebugSubject_;
+  CommunicationSubject_ = new Subject<IMessage<unknown>>();
+  ClientSubject_ = new BehaviorSubject<Client | null>(null);
+  IDSubject_ = new BehaviorSubject<string | null>(null);
+  UpdateStateSubject_ = new Subject();
+  OnDataChannelMessageSubject_ = new Subject<[string, string]>();
+  OnStreamSubject_ = new Subject<MediaStream>();
+  DebugSubject_ = new Subject();
+
+  constructor() {
+    // Subscriptions
+    this._MediaSubject.subscribe(this.init);
+
+    this.ClientSubject_.pipe(
+      filter((c) => !!c),
+      switchMap((client) => client!.OnDataChannelMessageSubject_)
+    ).subscribe(this.onDataChannelHandler);
+
+    this.ClientSubject_.pipe(
+      filter((c) => !!c),
+      switchMap((client) => client!.OnDataChannelSubject_)
+    ).subscribe(console.warn);
+
+    this.ClientSubject_.pipe(
+      filter((c) => !!c),
+      switchMap((client) => client!.OnStreamSubject_)
+    ).subscribe(this.onStreamHandler);
+
+    this._BroadcastSubject.subscribe(this.onBroadcastHandler);
+
+    this._CommunicationSubject.subscribe((m) =>
+      this.CommunicationSubject_.next(m)
+    );
+
+    this.CommunicationSubject_.pipe(debounceTime(100)).subscribe(() =>
+      this.UpdateStateSubject_.next()
+    );
+
+    this.ClientSubject_.pipe(
+      filter((c) => !!c),
+      switchMap((client) => client!.DebugSubject_)
+    ).subscribe((m) => this.DebugSubject_.next(m));
+
+    this.ClientSubject_.pipe(
+      filter((c) => !!c),
+      switchMap(() => this._MediaSubject)
+    ).subscribe(this.onMediaHandler);
+
+    this.DebugSubject_.pipe(filter(isDebug)).subscribe((m) =>
+      console.warn("RTC Service: ", m)
+    );
+  }
+
+  // Methods
+  init = (stream: MediaStream) => {
+    const client = new Client(this.CommunicationSubject_, stream);
+    this.ClientSubject_.next(client);
+    this.IDSubject_.next(client.id);
+  };
+
+  onDataChannelHandler = (m: [string, string]) => {
+    this.DebugSubject_.next(m);
+    this.OnDataChannelMessageSubject_.next(m);
+  };
+
+  onBroadcastHandler = (message: string) => {
+    // DebugSubject_.next(message);
+    const client = this.ClientSubject_.getValue();
+    if (!client) return;
+    client.broadcastData(message);
+  };
+
+  onMediaHandler = (media: MediaStream | null) => {
+    this.DebugSubject_.next("RTCService -> onMediaHandler");
+    const client = this.ClientSubject_.getValue();
+    if (!client) return;
+    client._LocalMediaSubject.next(media);
+  };
+
+  onStreamHandler = ([_, stream]: [string, MediaStream]) => {
+    this.DebugSubject_.next("RTC Service -> onStreamHandler");
+    this.OnStreamSubject_.next(stream);
+  };
 }
+
+@singleton()
+class RTCServiceMock implements IRTCService {
+  // Input
+  _InitSubject = new Subject();
+  _BroadcastSubject = new Subject<string>();
+  _CommunicationSubject = new Subject<IMessage<unknown>>();
+  _MediaSubject = new Subject<MediaStream>();
+
+  // Output
+  CommunicationSubject_ = new Subject<IMessage<unknown>>();
+  ClientSubject_ = new BehaviorSubject<Client | null>(null);
+  IDSubject_ = new BehaviorSubject<string | null>(null);
+  UpdateStateSubject_ = new Subject();
+  OnDataChannelMessageSubject_ = new Subject<[string, string]>();
+  OnStreamSubject_ = new Subject<MediaStream>();
+  DebugSubject_ = new Subject();
+}
+
+container.register("LeapService", {
+  useClass: isTest ? RTCServiceMock : RTCService,
+});

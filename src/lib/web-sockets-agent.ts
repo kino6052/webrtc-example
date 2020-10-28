@@ -17,10 +17,10 @@ export class WebSocketsAgent {
   public DebugSubject_ = new Subject();
 
   constructor(
+    public url: string,
     private _CommunicationSubject: Subject<IMessage<unknown>>,
     private CommunicationSubject_: Subject<IMessage<unknown>>
   ) {
-    const url = this.getURL();
     this.ws = new WebSocket(url);
     this.ws.onmessage = this.onMessageHandler;
     this.ws.onopen = this.onOpenHandler;
@@ -48,7 +48,9 @@ export class WebSocketsAgent {
       });
   };
 
-  getURL = () => {
+  parseURL = (url: string) => url.replace("https", "wss").replace("http", "ws");
+
+  static getURL = () => {
     let origin = window.location.origin;
     origin = origin.replace("https", "wss").replace("http", "ws");
     return origin;
