@@ -3,8 +3,7 @@ import { debounceTime } from "rxjs/internal/operators/debounceTime";
 import { filter } from "rxjs/internal/operators/filter";
 import { switchMap } from "rxjs/internal/operators/switchMap";
 import { Subject } from "rxjs/internal/Subject";
-import { container } from "tsyringe";
-import singleton from "tsyringe/dist/typings/decorators/singleton";
+import { container, singleton } from "tsyringe";
 import { isDebug, isTest } from "../../../const";
 import { IMessage } from "../../../lib/broadcast";
 import { Client } from "../../../lib/client";
@@ -24,7 +23,7 @@ export interface IRTCService {
 }
 
 @singleton()
-class RTCService implements IRTCService {
+export class RTCService implements IRTCService {
   // Input
   _InitSubject = new Subject();
   _BroadcastSubject = new Subject<string>();
@@ -42,7 +41,7 @@ class RTCService implements IRTCService {
 
   constructor() {
     // Subscriptions
-    this._MediaSubject.subscribe(this.init);
+    this._InitSubject.subscribe(this.init);
 
     this.ClientSubject_.pipe(
       filter((c) => !!c),
@@ -85,8 +84,8 @@ class RTCService implements IRTCService {
   }
 
   // Methods
-  init = (stream: MediaStream) => {
-    const client = new Client(this.CommunicationSubject_, stream);
+  init = () => {
+    const client = new Client(this.CommunicationSubject_);
     this.ClientSubject_.next(client);
     this.IDSubject_.next(client.id);
   };
@@ -134,6 +133,6 @@ class RTCServiceMock implements IRTCService {
   DebugSubject_ = new Subject();
 }
 
-container.register("LeapService", {
+container.register<IRTCService>(RTCService, {
   useClass: isTest ? RTCServiceMock : RTCService,
 });

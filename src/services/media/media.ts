@@ -12,7 +12,7 @@ export interface IMediaService {
 }
 
 @singleton()
-class MediaServiceMock implements IMediaService {
+export class MediaServiceMock implements IMediaService {
   _GetUserMedia = new Subject<[boolean, boolean]>();
   _PlayAudioSubject = new Subject<MediaStream>();
   MediaSubject_ = new BehaviorSubject<MediaStream | null>(null);
@@ -20,7 +20,7 @@ class MediaServiceMock implements IMediaService {
 }
 
 @singleton()
-class MediaService implements IMediaService {
+export class MediaService implements IMediaService {
   _GetUserMedia = new Subject<[boolean, boolean]>();
   _PlayAudioSubject = new Subject<MediaStream>();
   MediaSubject_ = new BehaviorSubject<MediaStream | null>(null);
@@ -59,6 +59,6 @@ class MediaService implements IMediaService {
   };
 }
 
-container.register("MediaService", {
+container.register<IMediaService>(MediaService, {
   useClass: isTest ? MediaServiceMock : MediaService,
 });

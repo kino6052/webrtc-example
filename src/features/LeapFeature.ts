@@ -1,46 +1,62 @@
 import { filter } from "rxjs/internal/operators/filter";
-import { container } from "tsyringe";
-import { inject, singleton } from "tsyringe/dist/typings/decorators";
+import { container, inject, singleton } from "tsyringe";
 import { IMessage } from "../lib/broadcast";
-import { IRTCService } from "../services/communication/rtc/rtc";
-import { ILeapService } from "../services/leap/leap";
-import { IRouterService } from "../services/router/router";
-import { IUnityService } from "../services/unity/unity";
+import { IRTCService, RTCService } from "../services/communication/rtc/rtc";
+import { ILeapService, LeapService } from "../services/leap/leap";
+import { IMediaService, MediaService } from "../services/media/media";
+import { IRouterService, RouterService } from "../services/router/router";
+import { IUnityService, UnityService } from "../services/unity/unity";
 import { EMessageType, ILeapMessage } from "../shared/definitions";
+
+type TLeapMessage = IMessage<{
+  direction: [number, number, number];
+  palmPosition: [number, number, number];
+}>;
 
 @singleton()
 class LeapFeature {
   constructor(
-    @inject("RouterService") private routerService: IRouterService,
-    @inject("LeapService") private leapService: ILeapService,
-    @inject("UnityService") private unityService: IUnityService,
-    @inject("RTCService") private rtcService: IRTCService
+    @inject(RouterService) private routerService: IRouterService,
+    @inject(LeapService) private leapService: ILeapService,
+    @inject(UnityService) private unityService: IUnityService,
+    @inject(RTCService) private rtcService: IRTCService,
+    @inject(MediaService) private mediaService: IMediaService
   ) {
-    routerService.RouteSubject_.subscribe((route) => {
+    // Turn on leap service when on /leap route
+    this.routerService.RouteSubject_.subscribe((route) => {
       const isOn = route === "/leap";
-      leapService._IsOnSubject_.next(isOn);
+      this.leapService._IsOnSubject_.next(isOn);
     });
 
-    leapService.MessageSubject_.subscribe((message: IMessage<unknown>) =>
-      rtcService._BroadcastSubject.next(JSON.stringify(message))
+    // If on /leap route, Turn on Microphone
+    this.leapService._IsOnSubject_.subscribe((isOn) => {
+      if (!isOn) return;
+      this.mediaService._GetUserMedia.next([true, false]);
+    });
+
+    // Leap Generated Messages Need to be Broadcasted to Every Participant
+    this.leapService.MessageSubject_.subscribe((message) =>
+      this.rtcService._BroadcastSubject.next(JSON.stringify(message))
     );
 
-    rtcService.CommunicationSubject_.pipe(
+    // Leap Message Received from Host is then Sent to Unity
+    this.rtcService.CommunicationSubject_.pipe(
       filter(this.isLeapMessage)
-    ).subscribe();
+    ).subscribe((message) => {
+      const m = message as TLeapMessage;
+      const leapMessage: ILeapMessage = {
+        type: EMessageType.Leap,
+        direction: m.data.direction,
+        palmPosition: m.data.palmPosition,
+      };
+      this.unityService._SendMessageToUnitySubject.next(leapMessage);
+    });
   }
 
-  init = () => {};
-
-  isLeapMessage = (message: IMessage<unknown>) => false;
-
-  transformMessage = (message: IMessage<unknown>) => {
-    const m: ILeapMessage = {
-      type: EMessageType.Leap,
-      palmPosition: [0, 0, 0],
-      direction: [0, 0, 0],
-    };
-    this.unityService._SendMessageToUnitySubject.next(m);
+  isLeapMessage = (message: unknown) => {
+    const { data: { direction, palmPosition } = {} } = message as TLeapMessage;
+    if (!direction || !palmPosition) return false;
+    return true;
   };
 }
 

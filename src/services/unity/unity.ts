@@ -20,7 +20,7 @@ const MANAGER = "Manager";
 const ON_MESSAGE = "OnMessage";
 
 @singleton()
-class UnityService {
+export class UnityService {
   // Input
   _CurrentTVChannelStateSubject = new BehaviorSubject<TTVChannel | null>(1);
   _CanSendMessages = new BehaviorSubject<boolean>(true);
@@ -92,6 +92,6 @@ class UnityServiceMock {
   DebugSubject_ = new Subject<{}>();
 }
 
-container.register("UnityService", {
+container.register(UnityService, {
   useClass: isTest ? UnityServiceMock : UnityService,
 });

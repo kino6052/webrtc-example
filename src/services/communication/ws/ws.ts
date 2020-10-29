@@ -7,29 +7,29 @@ import { isDebug } from "../../../const";
 import { IMessage } from "../../../lib/broadcast";
 import { WebSocketsAgent } from "../../../lib/web-sockets-agent";
 
-export interface IWebSocketService {
-  _CommunicationSubject: Subject<IMessage<unknown>>;
+export interface IWebSocketService<T> {
+  _CommunicationSubject: Subject<T>;
   _IsWindowLoadedSubject: Subject<unknown>;
   _IsRemoteSubject: BehaviorSubject<boolean>;
-  CommunicationSubject_: Subject<IMessage<unknown>>;
-  WebSocketsAgentSubject_: BehaviorSubject<WebSocketsAgent | null>;
+  CommunicationSubject_: Subject<T>;
+  WebSocketsAgentSubject_: BehaviorSubject<WebSocketsAgent<T> | null>;
   ResetAgentSubject_: Subject<unknown>;
   IsWebSocketConnectionOpen_: BehaviorSubject<boolean>;
   DebugSubject_: Subject<unknown>;
 }
 
 @injectable()
-export class WebSocketService implements IWebSocketService {
+export class WebSocketService<T> implements IWebSocketService<T> {
   // Input
-  public _CommunicationSubject = new Subject<IMessage<unknown>>();
+  public _CommunicationSubject = new Subject<T>();
   public _IsWindowLoadedSubject = new Subject();
   public _IsRemoteSubject = new BehaviorSubject<boolean>(false);
 
   // Output
-  public CommunicationSubject_ = new Subject<IMessage<unknown>>();
-  public WebSocketsAgentSubject_ = new BehaviorSubject<WebSocketsAgent | null>(
-    null
-  );
+  public CommunicationSubject_ = new Subject<T>();
+  public WebSocketsAgentSubject_ = new BehaviorSubject<WebSocketsAgent<
+    T
+  > | null>(null);
   public ResetAgentSubject_ = new Subject();
   public IsWebSocketConnectionOpen_ = new BehaviorSubject(false);
   public DebugSubject_ = new Subject();
@@ -80,22 +80,24 @@ export class WebSocketService implements IWebSocketService {
   };
 }
 
-export class MockWebSocketService implements IWebSocketService {
+@injectable()
+export class MockWebSocketService<T> implements IWebSocketService<T> {
   // Input
-  public _CommunicationSubject = new Subject<IMessage<unknown>>();
+  public _CommunicationSubject = new Subject<T>();
   public _IsWindowLoadedSubject = new Subject();
   public _IsRemoteSubject = new BehaviorSubject<boolean>(false);
 
   // Output
-  public CommunicationSubject_ = new Subject<IMessage<unknown>>();
-  public WebSocketsAgentSubject_ = new BehaviorSubject<WebSocketsAgent | null>(
-    null
-  );
+  public CommunicationSubject_ = new Subject<T>();
+  public WebSocketsAgentSubject_ = new BehaviorSubject<WebSocketsAgent<
+    T
+  > | null>(null);
   public ResetAgentSubject_ = new Subject();
   public IsWebSocketConnectionOpen_ = new BehaviorSubject(false);
   public DebugSubject_ = new Subject();
 }
 
-container.register("WebSocketService", {
-  useFactory: () => new WebSocketService(WebSocketsAgent.getURL()),
+container.register<IWebSocketService<IMessage<unknown>>>(WebSocketService, {
+  useFactory: () =>
+    new WebSocketService<IMessage<unknown>>(WebSocketsAgent.getURL()),
 });

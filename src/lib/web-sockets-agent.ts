@@ -2,9 +2,8 @@ import { BehaviorSubject } from "rxjs/internal/BehaviorSubject";
 import { filter } from "rxjs/internal/operators/filter";
 import { Subject } from "rxjs/internal/Subject";
 import { isDebug } from "../const";
-import { IMessage } from "./broadcast";
 
-export class WebSocketsAgent {
+export class WebSocketsAgent<T> {
   private ws: WebSocket;
 
   // Flags
@@ -18,8 +17,8 @@ export class WebSocketsAgent {
 
   constructor(
     public url: string,
-    private _CommunicationSubject: Subject<IMessage<unknown>>,
-    private CommunicationSubject_: Subject<IMessage<unknown>>
+    private _CommunicationSubject: Subject<T>,
+    private CommunicationSubject_: Subject<T>
   ) {
     this.ws = new WebSocket(url);
     this.ws.onmessage = this.onMessageHandler;
@@ -58,7 +57,7 @@ export class WebSocketsAgent {
 
   onMessageHandler = (event: MessageEvent) => {
     this.DebugSubject_.next(event.data);
-    const message = JSON.parse(event.data) as IMessage<unknown>;
+    const message = JSON.parse(event.data) as T;
     this.canSend = false;
     this.CommunicationSubject_.next(message);
   };

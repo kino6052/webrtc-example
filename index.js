@@ -1,6 +1,11 @@
 const express = require("express");
 const http = require("http");
 const bodyParser = require("body-parser");
+const path = require("path");
+
+const DebugSubject = {
+  next: console.warn,
+};
 
 let app = express();
 
@@ -13,11 +18,24 @@ const wss = new WebSocket.Server({ server });
 
 let port = process.env.PORT || PORT;
 
-app.use(express.static("./"));
+app.use("/static", express.static("./"));
+
+app.get("/leap", (req, res, next) => {
+  console.warn("Leap");
+  next();
+});
+
+app.get("/", (req, res, next) => {
+  next();
+});
 
 app.use((req, res, next) => {
   DebugSubject.next(req.body);
   next();
+});
+
+app.use((req, res, next) => {
+  res.sendFile(path.join(__dirname, "./index.html"));
 });
 
 app.set("port", port);

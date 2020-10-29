@@ -88,18 +88,38 @@ export class Client {
     return stream;
   };
 
-  replaceStream = (stream: MediaStream) => {
+  public replaceStream = (stream: MediaStream) => {
+    const { videoTrack, audioTrack } = stream
+      .getTracks()
+      .reduce((acc, track) => {
+        if (track.kind === "video") {
+          acc.videoTrack = track;
+        } else if (track.kind === "audio") {
+          acc.audioTrack = track;
+        }
+        return acc;
+      }, {} as { audioTrack: MediaStreamTrack; videoTrack: MediaStreamTrack });
+    if (videoTrack) this.replaceVideoTrack(videoTrack);
+    if (audioTrack) this.replaceAudioTrack(audioTrack);
+  };
+
+  public replaceVideoTrack = (track: MediaStreamTrack) => {
     const connections = this.ConnectionManager.connections;
-    const tracks = stream.getTracks();
     for (let id in connections) {
       const senders = connections[id].getSenders();
-      for (let sender of senders) {
-        for (let track of tracks) {
-          if (track.kind === sender.track?.kind) {
-            sender.replaceTrack(track);
-          }
-        }
-      }
+      const videoSender = senders.find((s) => s.track?.kind === "video");
+      if (!videoSender) return;
+      videoSender.replaceTrack(track);
+    }
+  };
+
+  public replaceAudioTrack = (track: MediaStreamTrack) => {
+    const connections = this.ConnectionManager.connections;
+    for (let id in connections) {
+      const senders = connections[id].getSenders();
+      const videoSender = senders.find((s) => s.track?.kind === "audio");
+      if (!videoSender) return;
+      videoSender.replaceTrack(track);
     }
   };
 
