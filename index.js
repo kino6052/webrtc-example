@@ -4,7 +4,7 @@ const bodyParser = require("body-parser");
 const path = require("path");
 
 const DebugSubject = {
-  next: console.warn,
+  next: () => {},
 };
 
 let app = express();
@@ -21,7 +21,7 @@ let port = process.env.PORT || PORT;
 app.use("/static", express.static("./"));
 
 app.get("/leap", (req, res, next) => {
-  console.warn("Leap");
+  // console.warn("Leap");
   next();
 });
 

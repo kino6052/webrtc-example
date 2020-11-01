@@ -59,6 +59,4 @@ export class MediaService implements IMediaService {
   };
 }
 
-container.register<IMediaService>(MediaService, {
-  useClass: isTest ? MediaServiceMock : MediaService,
-});
+container.registerSingleton<IMediaService>(MediaService);

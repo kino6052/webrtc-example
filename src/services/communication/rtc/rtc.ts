@@ -4,7 +4,7 @@ import { filter } from "rxjs/internal/operators/filter";
 import { switchMap } from "rxjs/internal/operators/switchMap";
 import { take } from "rxjs/internal/operators/take";
 import { Subject } from "rxjs/internal/Subject";
-import { container, singleton } from "tsyringe";
+import { container, injectable, singleton } from "tsyringe";
 import { isDebug, isTest } from "../../../const";
 import { IMessage } from "../../../lib/broadcast";
 import { Client } from "../../../lib/client";
@@ -25,6 +25,7 @@ export interface IRTCService {
 
 @singleton()
 export class RTCService implements IRTCService {
+  client: Client | null = null;
   // Input
   _InitSubject = new Subject();
   _BroadcastSubject = new Subject<string>();
@@ -41,6 +42,7 @@ export class RTCService implements IRTCService {
   DebugSubject_ = new Subject();
 
   constructor() {
+    console.warn("here");
     // Subscriptions
     this._InitSubject.pipe(take(1)).subscribe(this.init);
 
@@ -87,6 +89,7 @@ export class RTCService implements IRTCService {
   // Methods
   init = () => {
     const client = new Client(this.CommunicationSubject_);
+    this.client = client;
     this.ClientSubject_.next(client);
     this.DebugSubject_.next(["Client", client]);
     this.IDSubject_.next(client.id);
@@ -99,9 +102,9 @@ export class RTCService implements IRTCService {
 
   onBroadcastHandler = (message: string) => {
     // DebugSubject_.next(message);
-    const client = this.ClientSubject_.getValue();
-    if (!client) return;
-    client.broadcastData(message);
+    console.warn("broadcast");
+    if (!this.client) return;
+    this.client.broadcastData(message);
   };
 
   onMediaHandler = (media: MediaStream | null) => {
@@ -135,6 +138,4 @@ class RTCServiceMock implements IRTCService {
   DebugSubject_ = new Subject();
 }
 
-container.register<IRTCService>(RTCService, {
-  useClass: isTest ? RTCServiceMock : RTCService,
-});
+container.registerSingleton<IRTCService>(RTCService);

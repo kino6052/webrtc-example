@@ -16,6 +16,7 @@ export interface IMessage {
 export interface ILeapMessage extends IMessage {
   palmPosition: [number, number, number];
   direction: [number, number, number];
+  palmNormal: [number, number, number];
 }
 
 export interface IPositionMessage extends IMessage {

@@ -1,4 +1,5 @@
 import { filter } from "rxjs/internal/operators/filter";
+import { map } from "rxjs/operators";
 import { container, inject, singleton } from "tsyringe";
 import { IMessage } from "../lib/broadcast";
 import { IRTCService, RTCService } from "../services/communication/rtc/rtc";
@@ -11,6 +12,7 @@ import { EMessageType, ILeapMessage } from "../shared/definitions";
 type TLeapMessage = IMessage<{
   direction: [number, number, number];
   palmPosition: [number, number, number];
+  palmNormal: [number, number, number];
 }>;
 
 @singleton()
@@ -35,12 +37,13 @@ class LeapFeature {
     });
 
     // Leap Generated Messages Need to be Broadcasted to Every Participant
-    this.leapService.MessageSubject_.subscribe((message) =>
-      this.rtcService._BroadcastSubject.next(JSON.stringify(message))
-    );
+    this.leapService.MessageSubject_.subscribe((message) => {
+      this.rtcService._BroadcastSubject.next(JSON.stringify(message));
+    });
 
     // Leap Message Received from Host is then Sent to Unity
-    this.rtcService.CommunicationSubject_.pipe(
+    this.rtcService.OnDataChannelMessageSubject_.pipe(
+      map(this.mapMessage),
       filter(this.isLeapMessage)
     ).subscribe((message) => {
       const m = message as TLeapMessage;
@@ -48,16 +51,35 @@ class LeapFeature {
         type: EMessageType.Leap,
         direction: m.data.direction,
         palmPosition: m.data.palmPosition,
+        palmNormal: m.data.palmNormal,
       };
       this.unityService._SendMessageToUnitySubject.next(leapMessage);
     });
   }
 
-  isLeapMessage = (message: unknown) => {
-    const { data: { direction, palmPosition } = {} } = message as TLeapMessage;
-    if (!direction || !palmPosition) return false;
+  mapMessage = (message: unknown) => {
+    //@ts-ignore
+    const m = JSON.parse(message?.[1])?.hands?.[0];
+    const m01 = {
+      data: {
+        direction: m?.direction,
+        palmPosition: m?.palmPosition,
+        palmNormal: m?.palmNormal,
+      },
+    } as TLeapMessage;
+    return m01;
+  };
+
+  isLeapMessage = (message: TLeapMessage) => {
+    const {
+      data: { direction, palmPosition, palmNormal },
+    } = message;
+    if (!direction || !palmPosition || !palmNormal) return false;
     return true;
   };
 }
+
+// @ts-ignore
+window.container = container;
 
 container.resolve(LeapFeature);
