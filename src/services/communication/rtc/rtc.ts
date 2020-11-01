@@ -2,6 +2,7 @@ import { BehaviorSubject } from "rxjs/internal/BehaviorSubject";
 import { debounceTime } from "rxjs/internal/operators/debounceTime";
 import { filter } from "rxjs/internal/operators/filter";
 import { switchMap } from "rxjs/internal/operators/switchMap";
+import { take } from "rxjs/internal/operators/take";
 import { Subject } from "rxjs/internal/Subject";
 import { container, singleton } from "tsyringe";
 import { isDebug, isTest } from "../../../const";
@@ -41,7 +42,7 @@ export class RTCService implements IRTCService {
 
   constructor() {
     // Subscriptions
-    this._InitSubject.subscribe(this.init);
+    this._InitSubject.pipe(take(1)).subscribe(this.init);
 
     this.ClientSubject_.pipe(
       filter((c) => !!c),
@@ -87,6 +88,7 @@ export class RTCService implements IRTCService {
   init = () => {
     const client = new Client(this.CommunicationSubject_);
     this.ClientSubject_.next(client);
+    this.DebugSubject_.next(["Client", client]);
     this.IDSubject_.next(client.id);
   };
 

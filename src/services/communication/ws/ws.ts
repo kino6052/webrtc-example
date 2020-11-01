@@ -69,9 +69,9 @@ export class WebSocketService<T> implements IWebSocketService<T> {
     this.WebSocketsAgentSubject_.next(ws);
   };
 
-  onWebSocketReadyHandler = (isReady: boolean) => {
+  onWebSocketReadyHandler = () => {
     this.DebugSubject_.next("WS Ready");
-    this.IsWebSocketConnectionOpen_.next(isReady);
+    this.IsWebSocketConnectionOpen_.next(true);
   };
 
   onWebSocketCloseHandler = () => {

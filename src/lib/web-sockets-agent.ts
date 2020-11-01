@@ -1,4 +1,3 @@
-import { BehaviorSubject } from "rxjs/internal/BehaviorSubject";
 import { filter } from "rxjs/internal/operators/filter";
 import { Subject } from "rxjs/internal/Subject";
 import { isDebug } from "../const";
@@ -7,11 +6,10 @@ export class WebSocketsAgent<T> {
   private ws: WebSocket;
 
   // Flags
-  private isOpen = false;
   private canSend = true;
 
   // Subjects
-  public IsWebSocketReadySubject = new BehaviorSubject(false);
+  public IsWebSocketReadySubject = new Subject();
   public OnCloseSubject = new Subject();
   public DebugSubject_ = new Subject();
 
@@ -25,9 +23,7 @@ export class WebSocketsAgent<T> {
     this.ws.onopen = this.onOpenHandler;
     this.ws.onclose = this.onCloseHandler;
     this.ws.onerror = this.onErrorHandler;
-    this.IsWebSocketReadySubject.pipe(filter((isReady) => isReady)).subscribe(
-      this.onIsWebSocketReadyHandler
-    );
+    this.IsWebSocketReadySubject.subscribe(this.onIsWebSocketReadyHandler);
     this.DebugSubject_.pipe(filter(isDebug)).subscribe((m) =>
       console.warn("WebSockets Agent: ", m)
     );
@@ -69,12 +65,10 @@ export class WebSocketsAgent<T> {
 
   onOpenHandler = () => {
     this.DebugSubject_.next("WS is Open");
-    this.isOpen = true;
-    this.IsWebSocketReadySubject.next(this.isOpen);
+    this.IsWebSocketReadySubject.next();
   };
 
   onCloseHandler = () => {
-    this.isOpen = false;
     this.OnCloseSubject.next();
   };
 

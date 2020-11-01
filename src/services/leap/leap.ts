@@ -19,9 +19,11 @@ export class LeapService implements ILeapService {
     this._IsOnSubject_.subscribe((isOn) => {
       if (!isOn) return;
       this.leapWebSocketService = new WebSocketService<ILeapMessage>(LEAP_URL);
-      this.leapWebSocketService.CommunicationSubject_.subscribe((m) =>
-        this.MessageSubject_.next(m)
-      );
+      this.leapWebSocketService.CommunicationSubject_.subscribe((m) => {
+        console.warn(m);
+        this.MessageSubject_.next(m);
+      });
+      this.leapWebSocketService._IsWindowLoadedSubject.next();
     });
   }
 }

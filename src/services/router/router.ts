@@ -12,7 +12,7 @@ export class RouterService implements IRouterService {
   _RouteSubject = new Subject<string>();
   RouteSubject_ = new Subject<string>();
   constructor() {
-    document.addEventListener("load", () => {
+    window.addEventListener("load", () => {
       const pathname = document?.location?.pathname;
       this.RouteSubject_.next(pathname);
     });
